@@ -20,37 +20,30 @@
         {
             "type": "Microsoft.Insights/dataCollectionRules",
             "apiVersion": "2021-04-01",
-            "name": "DCR-WindowsPerfCounters",
+            "name": "DCR-AMA-LinuxSyslog",
             "location": "[parameters('location')]",
-            "kind": "Windows",
+            "kind": "Linux",
             "properties": {
                 "dataSources": {
-                    "performanceCounters": [
+                    "syslog": [
                         {
                             "streams": [
-                                "Microsoft-Perf"
+                                "Microsoft-Syslog"
                             ],
-                            "samplingFrequencyInSeconds": 60,
-                            "counterSpecifiers": [
-                                "\\LogicalDisk(*)\\% Free Space",
-                                "\\LogicalDisk(*)\\Avg. Disk sec/Read",
-                                "\\LogicalDisk(*)\\Avg. Disk sec/Write",
-                                "\\LogicalDisk(*)\\Current Disk Queue Length",
-                                "\\LogicalDisk(*)\\Disk Reads/sec",
-                                "\\LogicalDisk(*)\\Disk Transfers/sec",
-                                "\\LogicalDisk(*)\\Disk Writes/sec",
-                                "\\LogicalDisk(*)\\Free Megabytes",
-                                "\\Memory(*)\\% Committed Bytes In Use",
-                                "\\Memory(*)\\Available Bytes",
-                                "\\Memory(*)\\Pages/sec",
-                                "\\Network Interface(*)\\Bytes Received/sec",
-                                "\\Network Interface(*)\\Bytes Sent/sec",
-                                "\\Network Interface(*)\\Bytes Total/sec",
-                                "\\Process(*)\\% Processor Time",
-                                "\\Processor(*)\\% Processor Time",
-                                "\\System(*)\\Processor Queue Length"
+                            "facilityNames": [
+                                "auth",
+                                "authpriv",
+                                "daemon",
+                                "kern"
                             ],
-                            "name": "perfCounterDataSource60"
+                            "logLevels": [
+                                "Warning",
+                                "Error",
+                                "Critical",
+                                "Alert",
+                                "Emergency"
+                            ],
+                            "name": "sysLogsDataSource"
                         }
                     ]
                 },
@@ -65,7 +58,7 @@
                 "dataFlows": [
                     {
                         "streams": [
-                            "Microsoft-Perf"
+                            "Microsoft-Syslog"
                         ],
                         "destinations": [
                             "la-data-destination"

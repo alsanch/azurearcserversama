@@ -20,7 +20,7 @@
         {
             "type": "Microsoft.Insights/dataCollectionRules",
             "apiVersion": "2021-04-01",
-            "name": "DCR-WindowsEvents",
+            "name": "DCR-AMA-WindowsEvents",
             "location": "[parameters('location')]",
             "kind": "Windows",
             "properties": {
