@@ -2,27 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "workspaceName": {
-            "type": "string",
-            "metadata": {
-                "description": "Workspace name"
-            }
-        },
-        "resourceGroupID": {
-            "type": "string",
-            "metadata": {
-                "description": "Resource Group ID"
-            }
-        },
-        "monitorWSID": {
-            "type": "string",
-            "metadata": {
-                "description": "Log Analytics workspace resource id"
-            }
-        },
         "policyAssignmentName": {
             "type": "string",
-            "defaultValue": "[guid(parameters('policyDefinitionID'), parameters('workspaceName'))]",
+            "defaultValue": "[guid(parameters('policyDefinitionID'))]",
             "metadata": {
                 "description": "Specifies the name of the policy assignment, can be used defined or an idempotent name as the defaultValue provides."
             }
@@ -36,7 +18,7 @@
         },
         "policyDefinitionID": {
             "type": "string",
-            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/69af7d4a-7b18-4044-93a9-2651498ef203",
+            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/91cb9edd-cd92-4d2f-b2f2-bdd8d065a3d4",
             "metadata": {
                 "description": "Specifies the ID of the policy definition or policy set definition being assigned."
             }
@@ -50,7 +32,7 @@
         }
     },
     "variables": {
-        "assignmentName": "[guid(parameters('policyDefinitionID'), parameters('workspaceName'))]",
+        "assignmentName": "[guid(parameters('policyDefinitionID'))]",
         "LogAnalyticsContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '92aaf0da-9dab-42b6-94a3-d43ce8d16293')]"
     },
     "resources": [
@@ -70,17 +52,13 @@
                 "enforcementMode": "Default",
                 "metadata": {},
                 "nonComplianceMessages": [],
-                "parameters": {
-                    "logAnalytics": {
-                        "value": "[parameters('monitorWSID')]"
-                    }
-                }
+                "parameters": {}
             }
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[guid(concat(variables('assignmentName'),parameters('resourceGroupID')))]",
+            "name": "[guid(concat(variables('assignmentName'),variables('LogAnalyticsContributor')))]",
             "properties": {
                 "roleDefinitionId": "[variables('LogAnalyticsContributor')]",
                 "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",

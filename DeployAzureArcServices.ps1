@@ -1,14 +1,15 @@
 # Deployment Variables to choose what to deploy
-$deployMonitorLAW = $true
-$deployMonitorLAWDataSources = $true
-$deployMonitorVMInsights = $true
-$deployAutomationAccount = $true
-$deployActionGroup = $true
-$deployAlerts = $true
-$deployWorkbooks = $true
-$deployDashboard = $true
-$deployAzurePolicies = $true
-$deployDefenderForCloud = $true
+$deployLAW = $true
+$deployDataCollectionPerfEvents = $true
+$deployVMInsightsPerfAndMap = $true
+$deployVMInsightsPerfOnly = $false
+$deployAutomationAccount = $false
+$deployActionGroup = $false
+$deployAlerts = $false
+$deployWorkbooks = $false
+$deployDashboard = $false
+$deployAzurePolicies = $false
+$deployDefenderForCloud = $false
 
 # Global variables
 $parametersFilePath = ".\Parameters.csv"
@@ -48,9 +49,9 @@ if ($notPresent) {
 #region ### Deploy the Monitor Log Analytics workspace
 Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying the Monitor Log Analytics Workspace"
-if ($deployMonitorLAW -eq $true) {
+if ($deployLAW -eq $true) {
     $deploymentName = "deploy_monitor_loganalytics_workspace"
-    $templateFile = ".\MonitorLogAnalyticsWorkspace\deploy.json"
+    $templateFile = ".\LogAnalyticsWorkspace\logAnalyticsWorkpsace.json"
         
     # Deploy the workspace
     Write-Host "Deploying log analytics workspace $MonitorWSName"
@@ -63,34 +64,176 @@ else {
 }
 #endregion
 
-#region ### Enable LA Monitor Data Sources: Events, Performance Counters, etc
+#region ### Deploy Data Collection Rules and Assign Azure Policies to associate DCRs
 Write-Host ""
-Write-Host -ForegroundColor Cyan "Deploying Data Sources in the Monitor the Log Analytics Workspace"
-if ($deployMonitorLAWDataSources -eq $true) {
-    $deploymentName = "deploy_data_sources"
-    $templateFile = ".\MonitorLogAnalyticsWorkspace\DataSources\deploy.json"
+Write-Host -ForegroundColor Cyan "Deploying Perf and Events Data Collection Rules"
+if ($deployDataCollectionPerfEvents -eq $true) {       
 
-    # Deploy the data sources
-    Write-Host "Deploying data sources for $MonitorWSName"
-    New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-        -workspaceName $MonitorWSName | Out-Null
+    ## Deploy Data Collection Rules
+    $templateBasePath = ".\DataCollection-PerfEvents\DCRs"
+
+    # Get the DCRs ARM template files
+    $DCRsCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
+        
+    # Deploy all the DCRs
+    foreach ($DCR in $DCRsCollection) {
+        $DCRName = $($DCR.Name).Split(".")[0]
+        $templateFile = "$templateBasePath\$($DCR.Name)"
+        $deploymentName = $("deploy_DCR_$DCRName").ToLower()
+
+        # Deploy this DCR
+        Write-Host "Deploying DCR: $DCRName"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -workspaceName $MonitorWSName -location $location | Out-Null
+    }
+
+    ## Assign Azure Policies to associate DCRs
+    $templateBasePath = ".\Policies"
+    $policiesScope = $parametersFileInput.Scope
+
+    ## Get the Data Collection Rules previously created
+    $DCRs = Get-AzDataCollectionRule -ResourceGroupName $resourceGroup | Where-Object { $_.Name -like 'DCR-AMA-*' }
+
+    # Assign the policies
+    foreach ($DCR in $DCRs) {
+        if ($DCR.Name -like "*Windows*"){
+            $azurePolicyName = "[MON] Configure Windows Arc Machine to be associated with " + $DCR.Name
+            $templateFile = "$templateBasePath\Configure Windows Arc Machine to be associated with a DCR.json"
+        }
+        elseif($DCR.Name -like "*Linux*"){
+            $azurePolicyName = "[MON] Configure Linux Arc Machine to be associated with " + $DCR.Name
+            $templateFile = "$templateBasePath\Configure Linux Arc Machine to be associated with a DCR.json"
+        }
+        
+        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
+
+        # Assign the policy at resource group/subscription scope
+        Write-Host "Assigning Azure Policy: $azurePolicyName"
+        if ($policiesScope -eq "subscription") {
+            New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
+                -policyAssignmentName $azurePolicyName -dcrResourceId $DCR.Id | Out-Null
+        }
+        elseif ($policiesScope -eq "resourcegroup") {
+            New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
+                -dcrResourceId $DCR.Id | Out-Null
+        }
+    }
 }
 else {
     Write-Host "Skipped"
 }
 #endregion
 
-#region ### Enable LA Monitor VM Insights solution
+#region ### Deploy VMInsights
 Write-Host ""
-Write-Host -ForegroundColor Cyan "Deploying VMInsights in the Monitor the Log Analytics Workspace"
-if ($deployMonitorVMInsights -eq $true) {
-    $deploymentName = "deploy_vminsights"
-    $templateFile = ".\VMInsights\deploy.json"
+Write-Host -ForegroundColor Cyan "Deploying VMInsights DCRs and related policies"
+if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $true) {
 
-    # Deploy VM Insights solution
-    Write-Host "Deploying VMInsights solution for $MonitorWSName"
-    New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-        -workspaceName $MonitorWSName -location $location | Out-Null
+    ## PART 1. Dependency Agent Policies
+    $templateBasePath = ".\DataCollection-VMInsights\Policies"
+    $policiesScope = $parametersFileInput.Scope
+
+    # Windows
+    $depAgentPolicyNameWindows = "[MON] Configure Dependency agent on Azure Arc enabled Windows servers"
+    $templateFileDepAgentWindows = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Windows servers.json"
+    $deploymentNameDepAgentWindows = "assign_policy_$($depAgentPolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
+    $deploymentNameDepAgentWindows = $deploymentNameDepAgentWindows.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentWindows.Length))
+
+    # Linux
+    $depAgentPolicyNameLinux = "[MON] Configure Dependency agent on Azure Arc enabled Linux servers"
+    $templateFileDepAgentLinux = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Linux servers.json"
+    $deploymentNameDepAgentLinux = "assign_policy_$($depAgentPolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
+    $deploymentNameDepAgentLinux = $deploymentNameDepAgentLinux.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentLinux.Length))
+
+    # Assign the policy at resource group/subscription scope
+    Write-Host "Assigning Azure Policy: $depAgentPolicyNameWindows"
+    Write-Host "Assigning Azure Policy: $depAgentPolicyNameLinux"
+    if ($policiesScope -eq "subscription") {
+        # Windows
+        New-AzDeployment -Name $deploymentNameDepAgentWindows -location $location -TemplateFile $templateFileDepAgentWindows `
+            -policyAssignmentName $depAgentPolicyNameWindows | Out-Null
+        # Linux
+        New-AzDeployment -Name $deploymentNameDepAgentLinux -location $location -TemplateFile $templateFileDepAgentLinux `
+            -policyAssignmentName $depAgentPolicyNameLinux | Out-Null
+    }
+    elseif ($policiesScope -eq "resourcegroup") {
+        # Windows
+        New-AzResourceGroupDeployment -Name $deploymentNameDepAgentWindows -ResourceGroupName $resourceGroup `
+            -TemplateFile $templateFileDepAgentWindows -location $location -policyAssignmentName $depAgentPolicyNameWindows `
+            | Out-Null
+
+        # Linux
+        New-AzResourceGroupDeployment -Name $deploymentNameDepAgentLinux -ResourceGroupName $resourceGroup `
+            -TemplateFile $templateFileDepAgentLinux -location $location -policyAssignmentName $depAgentPolicyNameLinux `
+            | Out-Null
+    }
+
+    ## PART 2. Deploy Data Collection Rules
+    $templateBasePath = ".\DataCollection-VMInsights\DCRs"
+
+    # Get the DCRs ARM template files
+    $DCRsCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
+        
+    # Deploy all the DCRs
+    foreach ($DCR in $DCRsCollection) {
+
+        if (($deployVMInsightsPerfAndMap -eq $true -and $DCR.Name -like "*PerfAndMap*") -or ($deployVMInsightsPerfOnly -eq $true -and $DCR.Name -like "*PerfOnly*")) {
+        $DCRName = $($DCR.Name).Split(".")[0]
+        $templateFile = "$templateBasePath\$($DCR.Name)"
+        $deploymentName = $("deploy_DCR_$DCRName").ToLower()
+
+        # Deploy this DCR
+        Write-Host "Deploying DCR: $DCRName"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -workspaceName $MonitorWSName -location $location | Out-Null
+        }
+    }
+
+    ## PART 3. Assign Azure Policies to associate DCRs
+    ## Get the Data Collection Rules previously created
+    $DCRs = Get-AzDataCollectionRule -ResourceGroupName $resourceGroup | Where-Object { $_.Name -like 'DCR-VMI-*' }
+
+    # Assign the policies
+    foreach ($DCR in $DCRs) {
+
+        # Associate Windows VMInsights DCR via Azure Policy
+        $azurePolicyNameWindows = "[MON] Configure Windows Arc Machine to be associated with " + $DCR.Name
+        $templateFileWindows = ".\Policies\Configure Windows Arc Machine to be associated with a DCR.json"
+        $deploymentNameWindows = "assign_policy_$($azurePolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentNameWindows = $deploymentNameWindows.substring(0, [System.Math]::Min(63, $deploymentNameWindows.Length))
+
+        # Associate Linux VMInsights DCR via Azure Policy
+        $azurePolicyNameLinux = "[MON] Configure Linux Arc Machine to be associated with " + $DCR.Name
+        $templateFileLinux = ".\Policies\Configure Linux Arc Machine to be associated with a DCR.json"
+        $deploymentNameLinux = "assign_policy_$($azurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentNameLinux = $deploymentNameLinux.substring(0, [System.Math]::Min(63, $deploymentNameLinux.Length))   
+
+        # Assign the policy at resource group/subscription scope
+        Write-Host "Assigning Azure Policy: $azurePolicyNameWindows"
+        Write-Host "Assigning Azure Policy: $azurePolicyNameLinux"
+        if ($policiesScope -eq "subscription") {
+            # Windows
+            New-AzDeployment -Name $deploymentNameWindows -location $location -TemplateFile $templateFileWindows `
+                -policyAssignmentName $azurePolicyNameWindows -dcrResourceId $DCR.Id | Out-Null
+            # Linux
+            New-AzDeployment -Name $deploymentNameLinux -location $location -TemplateFile $templateFileLinux `
+                -policyAssignmentName $azurePolicyNameLinux -dcrResourceId $DCR.Id | Out-Null
+        }
+        elseif ($policiesScope -eq "resourcegroup") {
+            # Windows
+            New-AzResourceGroupDeployment -Name $deploymentNameWindows -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFileWindows -location $location -policyAssignmentName $azurePolicyNameWindows `
+                -dcrResourceId $DCR.Id | Out-Null
+
+            # Linux
+            New-AzResourceGroupDeployment -Name $deploymentNameLinux -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFileLinux -location $location -policyAssignmentName $azurePolicyNameLinux `
+                -dcrResourceId $DCR.Id | Out-Null
+        }
+    }
+
 }
 else {
     Write-Host "Skipped"
@@ -269,6 +412,7 @@ if ($deployAzurePolicies -eq $true) {
     # Assign the policies
     foreach ($azurePolicyItem in $azurePoliciesCollection) {
         # Skip DependencyAgent Policies if VMInsights is not required
+        # ACTUALIZAR ESTO PARA VMINSIGTS DCR!!!
         if (($deployMonitorVMInsights -eq $false) -And ($azurePolicyItem -like "*Dependency*" -eq $true)) {
             continue
         }
