@@ -20,34 +20,21 @@
         {
             "type": "Microsoft.Insights/dataCollectionRules",
             "apiVersion": "2021-04-01",
-            "name": "DCR-AMA-LinuxPerfCounters",
+            "name": "DCR-WindowsEvents",
             "location": "[parameters('location')]",
-            "kind": "Linux",
+            "kind": "Windows",
             "properties": {
                 "dataSources": {
-                    "performanceCounters": [
+                    "windowsEventLogs": [
                         {
                             "streams": [
-                                "Microsoft-Perf"
+                                "Microsoft-Event"
                             ],
-                            "samplingFrequencyInSeconds": 60,
-                            "counterSpecifiers": [
-                                "\\LogicalDisk(*)\\% Used Inodes",
-                                "\\LogicalDisk(*)\\% Used Space",
-                                "\\LogicalDisk(*)\\Disk Reads/sec",
-                                "\\LogicalDisk(*)\\Disk Writes/sec",
-                                "\\LogicalDisk(*)\\Disk Transfers/sec",
-                                "\\LogicalDisk(*)\\Free Megabytes",
-                                "\\Memory(*)\\% Used Memory",
-                                "\\Memory(*)\\% Used Swap Space",
-                                "\\Memory(*)\\Available MBytes Memory",
-                                "\\Network(*)\\Total Bytes Received",
-                                "\\Network(*)\\Total Bytes Transmitted",
-                                "\\Network Interface(*)\\Bytes Total/sec",
-                                "\\Processor(*)\\% Privileged Time",
-                                "\\Processor(*)\\% Processor Time"
+                            "xPathQueries": [
+                                "System!*[System[(Level=1 or Level=2 or Level=3)]]",
+                                "Application!*[Application[(Level=1 or Level=2 or Level=3)]]"
                             ],
-                            "name": "perfCounterDataSource60"
+                            "name": "eventLogsDataSource"
                         }
                     ]
                 },
@@ -62,7 +49,7 @@
                 "dataFlows": [
                     {
                         "streams": [
-                            "Microsoft-Perf"
+                            "Microsoft-Event"
                         ],
                         "destinations": [
                             "la-data-destination"

@@ -1,8 +1,9 @@
 # Deployment Variables to choose what to deploy
-$deployLAW = $true
-$deployDataCollectionPerfEvents = $true
-$deployVMInsightsPerfAndMap = $true
+$deployLAW = $false
+$deployDataCollectionPerfEvents = $false
+$deployVMInsightsPerfAndMap = $false
 $deployVMInsightsPerfOnly = $false
+$deployChangeTrackingAndInventory = $true
 $deployAutomationAccount = $false
 $deployActionGroup = $false
 $deployAlerts = $false
@@ -131,6 +132,11 @@ Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying VMInsights DCRs and related policies"
 if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $true) {
 
+    # Control: only one variable can be true
+    if ($deployVMInsightsPerfAndMap -eq $true -and $deployVMInsightsPerfOnly -eq $true){
+        $deployVMInsightsPerfOnly = $false
+    }
+
     ## PART 1. Dependency Agent Policies
     $templateBasePath = ".\DataCollection-VMInsights\Policies"
     $policiesScope = $parametersFileInput.Scope
@@ -239,6 +245,64 @@ else {
     Write-Host "Skipped"
 }
 #endregion
+
+#region ### Deploy Change Tracking and Inventory
+Write-Host ""
+Write-Host -ForegroundColor Cyan "Deploying Change Tracking and Inventory"
+if ($deployChangeTrackingAndInventory -eq $true) {       
+
+    ## Deploy Data Collection Rules
+    $templateBasePath = ".\ChangeTrackingAndInventory\DCRs"
+
+    # Get the DCRs ARM template files
+    $DCRsCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
+        
+    # Deploy all the DCRs
+    foreach ($DCR in $DCRsCollection) {
+        $DCRName = $($DCR.Name).Split(".")[0]
+        $templateFile = "$templateBasePath\$($DCR.Name)"
+        $deploymentName = $("deploy_DCR_$DCRName").ToLower()
+
+        # Deploy this DCR
+        Write-Host "Deploying DCR: $DCRName"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -workspaceName $MonitorWSName -location $location | Out-Null
+    }
+
+    ## Assign Azure Policies to associate DCRs
+    $templateBasePath = ".\ChangeTrackingAndInventory\Policies"
+    $policiesScope = $parametersFileInput.Scope
+
+    ## Get the Data Collection Rules previously created
+    $DCRs = Get-AzDataCollectionRule -ResourceGroupName $resourceGroup | Where-Object { $_.Name -like 'DCR-ChangeTracking*' }
+
+    # Assign the policies
+    foreach ($DCR in $DCRs) {
+        $azurePolicyName = "[CT] Enable ChangeTracking and Inventory for Arc-enabled virtual machines"
+        $templateFile = "$templateBasePath\Enable ChangeTracking and Inventory for Arc-enabled virtual machines.json"
+        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[CT]', '')
+        $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
+
+        # Assign the policy at resource group/subscription scope
+        Write-Host "Assigning Azure Policy: $azurePolicyName"
+        if ($policiesScope -eq "subscription") {
+            New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
+                -policyAssignmentName $azurePolicyName -dcrResourceId $DCR.Id | Out-Null
+        }
+        elseif ($policiesScope -eq "resourcegroup") {
+            New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
+                -dcrResourceId $DCR.Id | Out-Null
+        }
+    }
+}
+else {
+    Write-Host "Skipped"
+}
+#endregion
+
+
+
 
 #region ### Automation account related resources
 Write-Host ""
