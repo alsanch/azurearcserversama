@@ -2,21 +2,21 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Workspace name"
+            }
+        },
         "resourceGroupID": {
             "type": "string",
             "metadata": {
                 "description": "Resource Group ID"
             }
         },
-        "dcrResourceId": {
-            "type": "string",
-            "metadata": {
-                "description": "Data Collection Rule resource id"
-            }
-        },
         "policyAssignmentName": {
             "type": "string",
-            "defaultValue": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID'))]",
+            "defaultValue": "[guid(parameters('policyDefinitionID'))]",
             "metadata": {
                 "description": "Specifies the name of the policy assignment, can be used defined or an idempotent name as the defaultValue provides."
             }
@@ -30,7 +30,7 @@
         },
         "policyDefinitionID": {
             "type": "string",
-            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/d5c37ce1-5f52-4523-b949-f19bf945b73a",
+            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/f36de009-cacb-47b3-b936-9c4c9120d064",
             "metadata": {
                 "description": "Specifies the ID of the policy definition or policy set definition being assigned."
             }
@@ -44,7 +44,7 @@
         }
     },
     "variables": {
-        "assignmentName": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID'))]",
+        "assignmentName": "[guid(parameters('policyDefinitionID'),parameters('resourceGroupID'))]",
         "LogAnalyticsContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '92aaf0da-9dab-42b6-94a3-d43ce8d16293')]",
         "MonitoringContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '749f88d5-cbae-40b8-bcfc-e573ddc772fa')]"
     },
@@ -66,8 +66,14 @@
                 "metadata": {},
                 "nonComplianceMessages": [],
                 "parameters": {
-                    "dcrResourceId": {
-                        "value": "[parameters('dcrResourceId')]"
+                    "laWorkspaceLocation": {
+                        "value": "[parameters('location')]",
+                    },
+                    "laWorkspaceId": {
+                        "value": "[resourceId('microsoft.operationalinsights/workspaces', parameters('workspaceName'))]"
+                    },
+                    "isEnabled": {
+                        "value": true
                     }
                 }
             }
@@ -88,7 +94,7 @@
         {
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[guid(concat(variables('assignmentName'),variables('MonitoringContributor')))]",
+            "name": "[guid(concat(variables('assignmentName'),variables('MonitoringContributor'),parameters('resourceGroupID')))]",
             "properties": {
                 "roleDefinitionId": "[variables('MonitoringContributor')]",
                 "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",

@@ -2,6 +2,12 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "resourceGroupID": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group ID"
+            }
+        },
         "dcrResourceId": {
             "type": "string",
             "metadata": {
@@ -10,7 +16,7 @@
         },
         "policyAssignmentName": {
             "type": "string",
-            "defaultValue": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'))]",
+            "defaultValue": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID'))]",
             "metadata": {
                 "description": "Specifies the name of the policy assignment, can be used defined or an idempotent name as the defaultValue provides."
             }
@@ -38,7 +44,7 @@
         }
     },
     "variables": {
-        "assignmentName": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'))]",
+        "assignmentName": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID'))]",
         "LogAnalyticsContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '92aaf0da-9dab-42b6-94a3-d43ce8d16293')]",
         "MonitoringContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '749f88d5-cbae-40b8-bcfc-e573ddc772fa')]"
     },
@@ -69,7 +75,7 @@
         {
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[guid(concat(variables('assignmentName'),variables('LogAnalyticsContributor')))]",
+            "name": "[guid(concat(variables('assignmentName'),variables('LogAnalyticsContributor'),parameters('resourceGroupID')))]",
             "properties": {
                 "roleDefinitionId": "[variables('LogAnalyticsContributor')]",
                 "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",
@@ -82,7 +88,7 @@
         {
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[guid(concat(variables('assignmentName'),variables('MonitoringContributor')))]",
+            "name": "[guid(concat(variables('assignmentName'),variables('MonitoringContributor'),parameters('resourceGroupID')))]",
             "properties": {
                 "roleDefinitionId": "[variables('MonitoringContributor')]",
                 "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",

@@ -2,6 +2,12 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "resourceGroupID": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group ID"
+            }
+        },
         "policyAssignmentName": {
             "type": "string",
             "defaultValue": "[guid(parameters('policyDefinitionID'))]",
@@ -32,7 +38,7 @@
         }
     },
     "variables": {
-        "assignmentName": "[guid(parameters('policyDefinitionID'))]",
+        "assignmentName": "[guid(parameters('policyDefinitionID'),parameters('resourceGroupID'))]",
         "LogAnalyticsContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '92aaf0da-9dab-42b6-94a3-d43ce8d16293')]"
     },
     "resources": [
@@ -58,7 +64,7 @@
         {
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[guid(concat(variables('assignmentName'),variables('LogAnalyticsContributor')))]",
+            "name": "[guid(concat(variables('assignmentName'),variables('LogAnalyticsContributor'),parameters('resourceGroupID')))]",
             "properties": {
                 "roleDefinitionId": "[variables('LogAnalyticsContributor')]",
                 "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",
