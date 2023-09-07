@@ -348,12 +348,12 @@ if ($deployUpdateManager -eq $true) {
         # Windows
         New-AzResourceGroupDeployment -Name $deploymentNameWindows -ResourceGroupName $resourceGroup `
             -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyNameWindows `
-            -osType "Windows" -resourceGroupID $resourceGroupID
+            -osType "Windows" -resourceGroupID $resourceGroupID | Out-Null
 
         # Linux
         New-AzResourceGroupDeployment -Name $deploymentNameLinux -ResourceGroupName $resourceGroup `
             -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyNameLinux `
-            -osType "Linux" -resourceGroupID $resourceGroupID
+            -osType "Linux" -resourceGroupID $resourceGroupID | Out-Null
     }
       
 }
