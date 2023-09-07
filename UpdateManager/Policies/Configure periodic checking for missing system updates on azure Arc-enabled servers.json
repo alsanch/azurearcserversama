@@ -5,8 +5,8 @@
         "osType": {
             "type": "String",
             "metadata": {
-            "displayName": "OS type",
-            "description": "OS type for the machines."
+                "displayName": "OS type",
+                "description": "OS type for the machines."
             }
         },
         "resourceGroupID": {

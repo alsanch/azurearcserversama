@@ -10,8 +10,7 @@ $deployAlerts = $true
 $deployWorkbooks = $true
 $deployDashboard = $true
 $deploySQLBPA = $true
-
-$deployDefenderForCloud = $false
+$deployDefenderForCloud = $true
 
 
 
@@ -54,7 +53,7 @@ Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying the Monitor Log Analytics Workspace"
 if ($deployLAW -eq $true) {
     $deploymentName = "deploy_monitor_loganalytics_workspace"
-    $templateFile = ".\LogAnalyticsWorkspace\logAnalyticsWorkpsace.json"
+    $templateFile = ".\LogAnalyticsWorkspace\logAnalyticsWorkspace.json"
         
     # Deploy the workspace
     Write-Host "Deploying log analytics workspace $MonitorWSName"
@@ -472,7 +471,7 @@ Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying the Azure Dashboard"
 if ($deployDashboard -eq $true) {
     $deploymentName = "deploy_azure_dashboard"
-    $templateFile = ".\Dashboard\deploy.json"
+    $templateFile = ".\Dashboard\dashboard.json"
     $dashboardName = "Azure Arc Dashboard - " + $namingPrefix
 
     # Deploy the Azure Dashboard
@@ -489,8 +488,8 @@ else {
 Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying Microsoft Defender for Cloud"
 if ($deployDefenderForCloud -eq $true) {
-    $templateFile = ".\DefenderForCloud\deploy.json"
-    $templateFileAtSubscription = ".\DefenderForCloud\deployatsubscription.json"
+    $templateFile = ".\DefenderForCloud\defenderLAW.json"
+    $templateFileAtSubscription = ".\DefenderForCloud\defenderSubSettigns.json"
     $deploymentName = "deploy_defenderforcloud_resources"
     $deploymentNameAtSubscription = "deploy_defenderforcloud_subscriptionsettings"
     $emailAddress = $parametersFileInput.Email

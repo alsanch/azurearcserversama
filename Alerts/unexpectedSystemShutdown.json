@@ -149,12 +149,12 @@
                 "targetResourceTypes": [
                     "Microsoft.OperationalInsights/workspaces"
                 ],
-                "windowSize": "[parameters('windowSize')]", 
+                "windowSize": "[parameters('windowSize')]",
                 "criteria": {
                     "allOf": [
                         {
                             "query": "Event | where (EventID == 6008 and Source ==\"EventLog\") or (EventID == 1074 and Source == \"User32\" and (RenderedDescription has \"shutdown\" or RenderedDescription has \"power off\")) \n",
-                            "timeAggregation": "[parameters('timeAggregation')]", 
+                            "timeAggregation": "[parameters('timeAggregation')]",
                             "dimensions": [
                                 {
                                     "name": "Computer",
