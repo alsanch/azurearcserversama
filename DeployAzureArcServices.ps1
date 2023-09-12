@@ -12,8 +12,6 @@ $deployDashboard = $true
 $deploySQLBPA = $true
 $deployDefenderForCloud = $true
 
-
-
 # Global variables
 $parametersFilePath = ".\Parameters.csv"
 $parametersFileInput = $(Import-Csv $parametersFilePath)
@@ -141,46 +139,48 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
         $deployVMInsightsPerfOnly = $false
     }
 
-    ## PART 1. Dependency Agent Policies
-    $templateBasePath = ".\DataCollection-VMInsights\Policies"
-    $policiesScope = $parametersFileInput.Scope
+    ## PART 1. Dependency Agent Policies (only needed for Map)
+    if ($deployVMInsightsPerfAndMap -eq $true){
+        $templateBasePath = ".\DataCollection-VMInsights\Policies"
+        $policiesScope = $parametersFileInput.Scope
 
-    # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
-    $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
+        # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
+        $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
 
-    # Windows
-    $depAgentPolicyNameWindows = "[MON] Configure Dependency agent on Azure Arc enabled Windows servers"
-    $templateFileDepAgentWindows = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Windows servers.json"
-    $deploymentNameDepAgentWindows = "assign_policy_$($depAgentPolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
-    $deploymentNameDepAgentWindows = $deploymentNameDepAgentWindows.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentWindows.Length))
-
-    # Linux
-    $depAgentPolicyNameLinux = "[MON] Configure Dependency agent on Azure Arc enabled Linux servers"
-    $templateFileDepAgentLinux = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Linux servers.json"
-    $deploymentNameDepAgentLinux = "assign_policy_$($depAgentPolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
-    $deploymentNameDepAgentLinux = $deploymentNameDepAgentLinux.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentLinux.Length))
-
-    # Assign the policy at resource group/subscription scope
-    Write-Host "Assigning Azure Policy: $depAgentPolicyNameWindows"
-    Write-Host "Assigning Azure Policy: $depAgentPolicyNameLinux"
-    if ($policiesScope -eq "subscription") {
         # Windows
-        New-AzDeployment -Name $deploymentNameDepAgentWindows -location $location -TemplateFile $templateFileDepAgentWindows `
-            -policyAssignmentName $depAgentPolicyNameWindows -resourceGroupID $resourceGroupID | Out-Null
-        # Linux
-        New-AzDeployment -Name $deploymentNameDepAgentLinux -location $location -TemplateFile $templateFileDepAgentLinux `
-            -policyAssignmentName $depAgentPolicyNameLinux -resourceGroupID $resourceGroupID | Out-Null
-    }
-    elseif ($policiesScope -eq "resourcegroup") {
-        # Windows
-        New-AzResourceGroupDeployment -Name $deploymentNameDepAgentWindows -ResourceGroupName $resourceGroup `
-            -TemplateFile $templateFileDepAgentWindows -location $location -policyAssignmentName $depAgentPolicyNameWindows `
-            -resourceGroupID $resourceGroupID | Out-Null
+        $depAgentPolicyNameWindows = "[MON] Configure Dependency agent on Azure Arc enabled Windows servers"
+        $templateFileDepAgentWindows = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Windows servers.json"
+        $deploymentNameDepAgentWindows = "assign_policy_$($depAgentPolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentNameDepAgentWindows = $deploymentNameDepAgentWindows.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentWindows.Length))
 
         # Linux
-        New-AzResourceGroupDeployment -Name $deploymentNameDepAgentLinux -ResourceGroupName $resourceGroup `
-            -TemplateFile $templateFileDepAgentLinux -location $location -policyAssignmentName $depAgentPolicyNameLinux `
-            -resourceGroupID $resourceGroupID | Out-Null
+        $depAgentPolicyNameLinux = "[MON] Configure Dependency agent on Azure Arc enabled Linux servers"
+        $templateFileDepAgentLinux = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Linux servers.json"
+        $deploymentNameDepAgentLinux = "assign_policy_$($depAgentPolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentNameDepAgentLinux = $deploymentNameDepAgentLinux.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentLinux.Length))
+
+        # Assign the policy at resource group/subscription scope
+        Write-Host "Assigning Azure Policy: $depAgentPolicyNameWindows"
+        Write-Host "Assigning Azure Policy: $depAgentPolicyNameLinux"
+        if ($policiesScope -eq "subscription") {
+            # Windows
+            New-AzDeployment -Name $deploymentNameDepAgentWindows -location $location -TemplateFile $templateFileDepAgentWindows `
+                -policyAssignmentName $depAgentPolicyNameWindows -resourceGroupID $resourceGroupID | Out-Null
+            # Linux
+            New-AzDeployment -Name $deploymentNameDepAgentLinux -location $location -TemplateFile $templateFileDepAgentLinux `
+                -policyAssignmentName $depAgentPolicyNameLinux -resourceGroupID $resourceGroupID | Out-Null
+        }
+        elseif ($policiesScope -eq "resourcegroup") {
+            # Windows
+            New-AzResourceGroupDeployment -Name $deploymentNameDepAgentWindows -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFileDepAgentWindows -location $location -policyAssignmentName $depAgentPolicyNameWindows `
+                -resourceGroupID $resourceGroupID | Out-Null
+
+            # Linux
+            New-AzResourceGroupDeployment -Name $deploymentNameDepAgentLinux -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFileDepAgentLinux -location $location -policyAssignmentName $depAgentPolicyNameLinux `
+                -resourceGroupID $resourceGroupID | Out-Null
+        }
     }
 
     ## PART 2. Deploy Data Collection Rules
@@ -193,14 +193,14 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
     foreach ($DCR in $DCRsCollection) {
 
         if (($deployVMInsightsPerfAndMap -eq $true -and $DCR.Name -like "*PerfAndMap*") -or ($deployVMInsightsPerfOnly -eq $true -and $DCR.Name -like "*PerfOnly*")) {
-        $DCRName = $($DCR.Name).Split(".")[0]
-        $templateFile = "$templateBasePath\$($DCR.Name)"
-        $deploymentName = $("deploy_DCR_$DCRName").ToLower()
+            $DCRName = $($DCR.Name).Split(".")[0]
+            $templateFile = "$templateBasePath\$($DCR.Name)"
+            $deploymentName = $("deploy_DCR_$DCRName").ToLower()
 
-        # Deploy this DCR
-        Write-Host "Deploying DCR: $DCRName"
-        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-            -workspaceName $MonitorWSName -location $location | Out-Null
+            # Deploy this DCR
+            Write-Host "Deploying DCR: $DCRName"
+            New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+                -workspaceName $MonitorWSName -location $location | Out-Null
         }
     }
 

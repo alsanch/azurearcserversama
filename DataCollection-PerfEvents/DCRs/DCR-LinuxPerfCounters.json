@@ -33,19 +33,7 @@
                             "samplingFrequencyInSeconds": 60,
                             "counterSpecifiers": [
                                 "\\LogicalDisk(*)\\% Used Inodes",
-                                "\\LogicalDisk(*)\\% Used Space",
-                                "\\LogicalDisk(*)\\Disk Reads/sec",
-                                "\\LogicalDisk(*)\\Disk Writes/sec",
-                                "\\LogicalDisk(*)\\Disk Transfers/sec",
-                                "\\LogicalDisk(*)\\Free Megabytes",
-                                "\\Memory(*)\\% Used Memory",
-                                "\\Memory(*)\\% Used Swap Space",
-                                "\\Memory(*)\\Available MBytes Memory",
-                                "\\Network(*)\\Total Bytes Received",
-                                "\\Network(*)\\Total Bytes Transmitted",
-                                "\\Network Interface(*)\\Bytes Total/sec",
-                                "\\Processor(*)\\% Privileged Time",
-                                "\\Processor(*)\\% Processor Time"
+                                "\\Memory(*)\\% Used Swap Space"
                             ],
                             "name": "perfCounterDataSource60"
                         }

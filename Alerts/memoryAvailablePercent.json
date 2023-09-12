@@ -18,7 +18,7 @@
         "alertName": {
             "type": "string",
             "minLength": 1,
-            "defaultValue": "LogicalDisk Free Space Percent",
+            "defaultValue": "Memory Available Percent",
             "metadata": {
                 "description": "Name of the alert"
             }
@@ -82,7 +82,7 @@
         },
         "threshold": {
             "type": "string",
-            "defaultValue": "10",
+            "defaultValue": "20",
             "metadata": {
                 "description": "The threshold value at which the alert is activated."
             }
@@ -153,18 +153,10 @@
                 "criteria": {
                     "allOf": [
                         {
-                            "query": "InsightsMetrics\n| where Origin == \"vm.azm.ms\"\n| where Namespace == \"LogicalDisk\" and Name == \"FreeSpacePercentage\"\n| extend Disk=tostring(todynamic(Tags)[\"vm.azm.ms/mountId\"])\n| summarize AvgDiskSpace = avg(Val) by Computer, _ResourceId, Disk\n",
+                            "query": "InsightsMetrics\n| where Origin == \"vm.azm.ms\"\n| where Namespace == \"Memory\" and Name == \"AvailableMB\"\n| extend TotalMemory = toreal(todynamic(Tags)[\"vm.azm.ms/memorySizeMB\"]) \n| extend AvailableMemoryPercentage = (toreal(Val) / TotalMemory) * 100.0\n| summarize AvgMEM = avg(AvailableMemoryPercentage) by Computer, _ResourceId\n",
                             "timeAggregation": "[parameters('timeAggregation')]",
-                            "metricMeasureColumn": "AvgDiskSpace",
-                            "dimensions": [
-                                {
-                                    "name": "Disk",
-                                    "operator": "Include",
-                                    "values": [
-                                        "*"
-                                    ]
-                                }
-                            ],
+                            "metricMeasureColumn": "AvgMEM",
+                            "dimensions": [],
                             "resourceIdColumn": "_ResourceId",
                             "operator": "[parameters('operator')]",
                             "threshold": "[parameters('threshold')]",
