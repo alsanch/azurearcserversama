@@ -19,6 +19,9 @@ $subscriptionName = $parametersFileInput.Subscription
 $resourceGroup = $parametersFileInput.ResourceGroup
 $namingPrefix = $parametersFileInput.NamingPrefix
 $location = $parametersFileInput.Location
+$policiesScope = $parametersFileInput.Scope
+$emailAddress = $parametersFileInput.Email
+$securityCollectionTier = $parametersFileInput.securityCollectionTier
 $MonitorWSName = $namingPrefix + "-la-monitor"
 $SecurityWSName = $namingPrefix + "-la-security"
 $ActionGroupName = $namingPrefix + "-ag-arc"
@@ -89,7 +92,6 @@ if ($deployDataCollectionPerfEvents -eq $true) {
 
     ## Assign Azure Policies to associate DCRs
     $templateBasePath = ".\Policies"
-    $policiesScope = $parametersFileInput.Scope
 
     # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
     $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
@@ -142,7 +144,6 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
     ## PART 1. Dependency Agent Policies (only needed for Map)
     if ($deployVMInsightsPerfAndMap -eq $true){
         $templateBasePath = ".\DataCollection-VMInsights\Policies"
-        $policiesScope = $parametersFileInput.Scope
 
         # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
         $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
@@ -278,7 +279,6 @@ if ($deployChangeTrackingAndInventory -eq $true) {
 
     ## Assign Azure Policies to associate DCRs
     $templateBasePath = ".\ChangeTrackingAndInventory\Policies"
-    $policiesScope = $parametersFileInput.Scope
 
     # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
     $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
@@ -317,7 +317,6 @@ Write-Host -ForegroundColor Cyan "Deploying Azure Update Manager Policies"
 if ($deployUpdateManager -eq $true) {        
     $templateBasePath = ".\UpdateManager\Policies"
     $templateFile = "$templateBasePath\Configure periodic checking for missing system updates on azure Arc-enabled servers.json"
-    $policiesScope = $parametersFileInput.Scope
 
     # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
     $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
@@ -367,7 +366,6 @@ Write-Host -ForegroundColor Cyan "Deploying SQL BPA Policy"
 if ($deploySQLBPA -eq $true) {        
     $templateBasePath = ".\SQLServerBPA\Policies"
     $templateFile = "$templateBasePath\Configure Arc-enabled Servers with SQL Server extension installed to enable SQL best practices assessment.json"
-    $policiesScope = $parametersFileInput.Scope
 
     # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
     $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
@@ -401,7 +399,6 @@ Write-Host -ForegroundColor Cyan "Deploying Azure Monitor Action Group"
 if ($deployActionGroup -eq $true) {
     $deploymentName = "deploy_action_group"
     $templateFile = ".\ActionGroup\actionGroup.json"
-    $emailAddress = $parametersFileInput.Email
         
     # Deploy the data sources
     Write-Host "Deploying Azure Monitor Action Group"
@@ -492,8 +489,6 @@ if ($deployDefenderForCloud -eq $true) {
     $templateFileAtSubscription = ".\DefenderForCloud\defenderSubSettigns.json"
     $deploymentName = "deploy_defenderforcloud_resources"
     $deploymentNameAtSubscription = "deploy_defenderforcloud_subscriptionsettings"
-    $emailAddress = $parametersFileInput.Email
-    $securityCollectionTier = $parametersFileInput.securityCollectionTier
        
     # Deploy Defender for Cloud
     Write-Host "Deploying Microsoft Defender for Cloud resources"
