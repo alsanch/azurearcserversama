@@ -8,6 +8,12 @@
                 "description": "Workspace name"
             }
         },
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
+        },
         "location": {
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
@@ -16,11 +22,14 @@
             }
         }
     },
+    "variables": {
+        "DCRPrefixName": "[concat(parameters('prefix'), '-DCR-AMA-LinuxSyslog')]"
+    },
     "resources": [
         {
             "type": "Microsoft.Insights/dataCollectionRules",
             "apiVersion": "2021-04-01",
-            "name": "DCR-AMA-LinuxSyslog",
+            "name": "[variables('DCRPrefixName')]",
             "location": "[parameters('location')]",
             "kind": "Linux",
             "properties": {

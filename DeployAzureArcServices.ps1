@@ -87,7 +87,7 @@ if ($deployDataCollectionPerfEvents -eq $true) {
         # Deploy this DCR
         Write-Host "Deploying DCR: $DCRName"
         New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-            -workspaceName $MonitorWSName -location $location | Out-Null
+            -workspaceName $MonitorWSName -location $location -prefix $namingPrefix | Out-Null
     }
 
     ## Assign Azure Policies to associate DCRs
@@ -201,7 +201,7 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
             # Deploy this DCR
             Write-Host "Deploying DCR: $DCRName"
             New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-                -workspaceName $MonitorWSName -location $location | Out-Null
+                -workspaceName $MonitorWSName -location $location -prefix $namingPrefix | Out-Null
         }
     }
 
@@ -274,7 +274,7 @@ if ($deployChangeTrackingAndInventory -eq $true) {
         # Deploy this DCR
         Write-Host "Deploying DCR: $DCRName"
         New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-            -workspaceName $MonitorWSName -location $location | Out-Null
+            -workspaceName $MonitorWSName -location $location -prefix $namingPrefix | Out-Null
     }
 
     ## Assign Azure Policies to associate DCRs
@@ -428,7 +428,7 @@ if ($deployAlerts -eq $true) {
         # Deploy this alert
         Write-Host "Deploying alert: $alertName"
         New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-            -workspaceName $MonitorWSName -location $location -actionGroupName $actionGroupName | Out-Null
+            -workspaceName $MonitorWSName -location $location -actionGroupName $actionGroupName -prefix $namingPrefix | Out-Null
     }
 }
 else {

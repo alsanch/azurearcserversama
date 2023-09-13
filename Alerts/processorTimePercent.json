@@ -8,6 +8,12 @@
                 "description": "Workspace name"
             }
         },
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
+        },
         "location": {
             "type": "string",
             "minLength": 1,
@@ -18,7 +24,7 @@
         "alertName": {
             "type": "string",
             "minLength": 1,
-            "defaultValue": "Processor Time Percent",
+            "defaultValue": "Processor-Time-Percent",
             "metadata": {
                 "description": "Name of the alert"
             }
@@ -42,13 +48,6 @@
             "defaultValue": true,
             "metadata": {
                 "description": "Specifies whether the alert will automatically resolve"
-            }
-        },
-        "alertDescription": {
-            "type": "string",
-            "defaultValue": "[parameters('alertName')]",
-            "metadata": {
-                "description": "Description of alert"
             }
         },
         "alertSeverity": {
@@ -130,16 +129,18 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+        "alertPrefixName": "[concat(parameters('prefix'), '-', parameters('alertName'))]"
+    },
     "resources": [
         {
             "type": "microsoft.insights/scheduledqueryrules",
             "apiVersion": "2023-03-15-preview",
-            "name": "[parameters('alertName')]",
+            "name": "[variables('alertPrefixName')]",
             "location": "[parameters('location')]",
             "properties": {
-                "displayName": "[parameters('alertName')]",
-                "description": "[parameters('alertDescription')]",
+                "displayName": "[variables('alertPrefixName')]",
+                "description": "[variables('alertPrefixName')]",
                 "severity": "[parameters('alertSeverity')]",
                 "enabled": "[parameters('isEnabled')]",
                 "evaluationFrequency": "[parameters('evaluationFrequency')]",

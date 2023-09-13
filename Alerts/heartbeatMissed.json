@@ -8,20 +8,18 @@
                 "description": "Workspace name"
             }
         },
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
+        },
         "convertRuleName": {
             "type": "string",
             "minLength": 1,
-            "defaultValue": "Heartbeat Missed",
+            "defaultValue": "Heartbeat-Missed",
             "metadata": {
                 "description": "Name of the rule to convert log to metric"
-            }
-        },
-        "convertRuleDescription": {
-            "type": "string",
-            "minLength": 1,
-            "defaultValue": "Metrics from logs alert",
-            "metadata": {
-                "description": "Description for log converted to metric"
             }
         },
         "location": {
@@ -36,29 +34,6 @@
             "defaultValue": "true",
             "metadata": {
                 "description": "Specifies whether the log conversion rule is enabled"
-            }
-        },
-        "convertRuleMetric": {
-            "type": "string",
-            "minLength": 1,
-            "defaultValue": "Heartbeat",
-            "metadata": {
-                "description": "Name of the metric once extraction done from logs."
-            }
-        },
-        "alertName": {
-            "type": "string",
-            "minLength": 1,
-            "defaultValue": "Heartbeat Missed",
-            "metadata": {
-                "description": "Name of the alert"
-            }
-        },
-        "alertDescription": {
-            "type": "string",
-            "defaultValue": "[parameters('alertName')]",
-            "metadata": {
-                "description": "Description of alert"
             }
         },
         "alertSeverity": {
@@ -148,21 +123,22 @@
         }
     },
     "variables": {
-        "convertRuleTag": "hidden-link:"
+        "convertRuleTag": "hidden-link:",
+        "alertPrefixName": "[concat(parameters('prefix'), '-', parameters('convertRuleName'))]"
     },
     "resources": [
         {
             "type": "Microsoft.Insights/scheduledQueryRules",
             "apiVersion": "2021-02-01-preview",
-            "name": "[parameters('convertRuleName')]",
+            "name": "[variables('alertPrefixName')]",
             "location": "[parameters('location')]",
             "tags": {
                 "[concat(variables('convertRuleTag'),resourceId('microsoft.operationalinsights/workspaces',parameters('workspaceName')))]": "Resource"
             },
             "kind": "LogToMetric",
             "properties": {
-                "displayName": "[parameters('convertRuleName')]",
-                "description": "[parameters('convertRuleDescription')]",
+                "displayName": "[variables('alertPrefixName')]",
+                "description": "[variables('alertPrefixName')]",
                 "enabled": "[parameters('convertRuleStatus')]",
                 "scopes": [
                     "[resourceId('microsoft.operationalinsights/workspaces',parameters('workspaceName'))]"
@@ -188,11 +164,11 @@
         {
             "type": "Microsoft.Insights/metricAlerts",
             "apiVersion": "2018-03-01",
-            "name": "[parameters('alertName')]",
+            "name": "[variables('alertPrefixName')]",
             "location": "global",
             "tags": {},
             "dependsOn": [
-                "[resourceId('Microsoft.Insights/scheduledQueryRules',parameters('convertRuleName'))]"
+                "[resourceId('Microsoft.Insights/scheduledQueryRules',variables('alertPrefixName'))]"
             ],
             "properties": {
                 "severity": "[parameters('alertSeverity')]",
@@ -200,7 +176,7 @@
                 "scopes": [
                     "[resourceId('microsoft.operationalinsights/workspaces',parameters('workspaceName'))]"
                 ],
-                "description": "[parameters('alertDescription')]",
+                "description": "[variables('alertPrefixName')]",
                 "evaluationFrequency": "[parameters('evaluationFrequency')]",
                 "windowSize": "[parameters('windowSize')]",
                 "criteria": {
