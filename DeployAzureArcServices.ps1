@@ -10,7 +10,6 @@ $deployAlerts = $true
 $deployWorkbooks = $true
 $deployDashboard = $true
 $deploySQLBPA = $true
-$deployDefenderForCloud = $true
 
 # Global variables
 $parametersFilePath = ".\Parameters.csv"
@@ -21,9 +20,7 @@ $namingPrefix = $parametersFileInput.NamingPrefix
 $location = $parametersFileInput.Location
 $policiesScope = $parametersFileInput.Scope
 $emailAddress = $parametersFileInput.Email
-$securityCollectionTier = $parametersFileInput.securityCollectionTier
 $MonitorWSName = $namingPrefix + "-la-monitor"
-$SecurityWSName = $namingPrefix + "-la-security"
 $ActionGroupName = $namingPrefix + "-ag-arc"
 $ActionGroupShortName = $namingPrefix + "-agarc"
 
@@ -475,30 +472,6 @@ if ($deployDashboard -eq $true) {
     Write-Host "Deploying the Azure Dashboard"
     New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
         -workspaceName $MonitorWSName -location $location -dashboardName $dashboardName | Out-Null    
-}
-else {
-    Write-Host "Skipped"
-}
-#endregion
-
-#region ### Deploy Microsoft Defender for Cloud
-Write-Host ""
-Write-Host -ForegroundColor Cyan "Deploying Microsoft Defender for Cloud"
-if ($deployDefenderForCloud -eq $true) {
-    $templateFile = ".\DefenderForCloud\defenderLAW.json"
-    $templateFileAtSubscription = ".\DefenderForCloud\defenderSubSettigns.json"
-    $deploymentName = "deploy_defenderforcloud_resources"
-    $deploymentNameAtSubscription = "deploy_defenderforcloud_subscriptionsettings"
-       
-    # Deploy Defender for Cloud
-    Write-Host "Deploying Microsoft Defender for Cloud resources"
-    New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-        -workspaceName $SecurityWSName -location $location -securityCollectionTier $securityCollectionTier | Out-Null
-
-    # Deployment at subscription level: defender for servers and defender notification settings
-    Write-Host "Deploying Microsoft Defender for Cloud settings at subscription level"
-    New-AzDeployment -Name $deploymentNameAtSubscription -Location $location -TemplateFile $templateFileAtSubscription `
-        -emails $emailAddress | Out-Null    
 }
 else {
     Write-Host "Skipped"
