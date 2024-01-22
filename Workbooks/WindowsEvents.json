@@ -27,6 +27,12 @@
             "metadata": {
                 "description": "Workspace name"
             }
+        },
+        "prefixName": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
         }
     },
     "variables": {
@@ -564,14 +570,14 @@
     },
     "resources": [
         {
-            "name": "[guid(parameters('workbookDisplayName'))]",
+            "name": "[guid(concat(parameters('workbookDisplayName'),' - ', parameters('prefixName')))]",
             "type": "microsoft.insights/workbooks",
             "location": "[resourceGroup().location]",
             "apiVersion": "2021-03-08",
             "dependsOn": [],
             "kind": "shared",
             "properties": {
-                "displayName": "[parameters('workbookDisplayName')]",
+                "displayName": "[concat(parameters('workbookDisplayName'),' - ', parameters('prefixName'))]",
                 "serializedData": "[string(variables('workbookContent'))]",
                 "version": "1.0",
                 "sourceId": "[parameters('workbookSourceId')]",
