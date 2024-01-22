@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceGroupID": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group ID"
+            }
+        },
+        "policyAssignmentName": {
+            "type": "string",
+            "defaultValue": "[guid(parameters('policyDefinitionID'),parameters('resourceGroupID'))]",
+            "metadata": {
+                "description": "Specifies the name of the policy assignment, can be used defined or an idempotent name as the defaultValue provides."
+            }
+        },
+        "policyDescription": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Specifies the description of the policy assignment."
+            }
+        },
+        "policyDefinitionID": {
+            "type": "string",
+            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/a4034bc6-ae50-406d-bf76-50f4ee5a7811",
+            "metadata": {
+                "description": "Specifies the ID of the policy definition or policy set definition being assigned."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "westeurope",
+            "metadata": {
+                "description": "Specifies the location in which to create the managed identity."
+            }
+        }
+    },
+    "variables": {
+        "assignmentName": "[guid(parameters('policyDefinitionID'),parameters('resourceGroupID'))]",
+        "VirtualMachineContributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2021-06-01",
+            "name": "[variables('assignmentName')]",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "policyDefinitionId": "[parameters('policyDefinitionID')]",
+                "notScopes": [],
+                "description": "[parameters('policyDescription')]",
+                "displayName": "[parameters('policyAssignmentName')]",
+                "enforcementMode": "Default",
+                "metadata": {},
+                "nonComplianceMessages": [],
+                "parameters": {
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-09-01-preview",
+            "name": "[guid(concat(variables('assignmentName'),variables('VirtualMachineContributor'),parameters('resourceGroupID')))]",
+            "properties": {
+                "roleDefinitionId": "[variables('VirtualMachineContributor')]",
+                "principalId": "[reference(resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName')),'2019-09-01', 'full').identity.principalId]",
+                "principalType": "ServicePrincipal"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Authorization/policyAssignments', variables('assignmentName'))]"
+            ]
+        }
+    ]
+}
