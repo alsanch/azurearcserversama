@@ -487,60 +487,43 @@ if ($deployChangeTrackingAndInventory -eq $true) {
             -workspaceName $MonitorWSName -location $location -prefix $namingPrefix | Out-Null
     }
 
-    if (1 -eq 0) {
-        ## Assign Azure Policies to associate DCRs
-        $templateBasePath = ".\ChangeTrackingAndInventory\Policies"
+    # Assign the policies
+    $templateBasePath = ".\ChangeTrackingAndInventory\Policies"
 
-        # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
-        $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
+    # Get the AzurePolicies ARM template files
+    $azurePoliciesCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
 
-        ## Get the Data Collection Rules previously created
-        $DCRs = Get-AzDataCollectionRule -ResourceGroupName $resourceGroup | Where-Object { $_.Name -like '*DCR-ChangeTracking*' }
+    # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
+    $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
 
-        # Assign the policies. There is a single DCR for change tracking
-        foreach ($DCR in $DCRs) {
+    ## Get the Data Collection Rule previously created
+    $DCR = Get-AzDataCollectionRule -ResourceGroupName $resourceGroup | Where-Object { $_.Name -like '*DCR-ChangeTracking*' }
+        
+    ## Per each policy
+    foreach ($azurePolicyItem in $azurePoliciesCollection) {
+
+        # Skip Azure VMs Policies if deployment for AzureVMs is not required
+        if (($deployForAzureVMs -eq $false) -And ($azurePolicyItem -notlike "*Arc*" -eq $true)) {
+            continue
+        }
+        
+        $azurePolicyName = "[CT] " + $($azurePolicyItem.Name).Split(".")[0]
+        $arcTemplateFile = "$templateBasePath\$($azurePolicyItem.Name)"
+        $arcDeploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[CT]', '')
+        $arcDeploymentName = $arcDeploymentName.substring(0, [System.Math]::Min(63, $arcDeploymentName.Length))
+
+        # Assign the policy at resource group/subscription scope
+        Write-Host "Assigning Azure Policy: $azurePolicyName"
+        if ($policiesScope -eq "subscription") {
             # Azure Arc-enabled servers
-            $arcAzurePolicyName = "[CT] Enable ChangeTracking and Inventory for Arc-enabled virtual machines"
-            $arcTemplateFile = "$templateBasePath\Enable ChangeTracking and Inventory for Arc-enabled virtual machines.json"
-            $arcDeploymentName = "assign_policy_$($arcAzurePolicyName)".Replace(' ', '').Replace('[CT]', '')
-            $arcDeploymentName = $arcDeploymentName.substring(0, [System.Math]::Min(63, $arcDeploymentName.Length))
-
-            # Azure VMs
-            if ($deployForAzureVMs -eq $true) {
-                $azAzurePolicyName = "[CT] Enable ChangeTracking and Inventory for Azure virtual machines"
-                $azTemplateFile = "$templateBasePath\Enable ChangeTracking and Inventory for Azure virtual machines.json"
-                $azDeploymentName = "assign_policy_$($azAzurePolicyName)".Replace(' ', '').Replace('[CT]', '')
-                $azDeploymentName = $azDeploymentName.substring(0, [System.Math]::Min(63, $azDeploymentName.Length))
-            }
-
-            # Assign the policy at resource group/subscription scope
-            Write-Host "Assigning Azure Policy: $arcAzurePolicyName"
-            if ($policiesScope -eq "subscription") {
-                # Azure Arc-enabled servers
-                New-AzDeployment -Name $arcDeploymentName -location $location -TemplateFile $arcTemplateFile `
-                    -policyAssignmentName $arcAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
-            
-                # Azure VMs
-                if ($deployForAzureVMs -eq $true) {
-                    Write-Host "Assigning Azure Policy: $azAzurePolicyName"
-                    New-AzDeployment -Name $azDeploymentName -location $location -TemplateFile $azTemplateFile `
-                        -policyAssignmentName $azAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
-                }
-            }
-            elseif ($policiesScope -eq "resourcegroup") {
-                # Azure Arc-enabled servers
-                New-AzResourceGroupDeployment -Name $arcDeploymentName -ResourceGroupName $resourceGroup `
-                    -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcAzurePolicyName `
-                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
-
-                # Azure VMs
-                if ($deployForAzureVMs -eq $true) {
-                    Write-Host "Assigning Azure Policy: $azAzurePolicyName"
-                    New-AzResourceGroupDeployment -Name $azDeploymentName -ResourceGroupName $resourceGroup `
-                        -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azAzurePolicyName `
-                        -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
-                }
-            }
+            New-AzDeployment -Name $arcDeploymentName -location $location -TemplateFile $arcTemplateFile `
+                -policyAssignmentName $arcAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+        }
+        elseif ($policiesScope -eq "resourcegroup") {
+            # Azure Arc-enabled servers
+            New-AzResourceGroupDeployment -Name $arcDeploymentName -ResourceGroupName $resourceGroup `
+                -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcAzurePolicyName `
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
         }
     }
 }

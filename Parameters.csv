@@ -1,2 +1,2 @@
-"Subscription","Resourcegroup","NamingPrefix", "Location", "Email", "Scope", "SecurityCollectionTier"
-"My Azure Subscription","rg-arc-mgmt","arc","westeurope", "mymail@mail.com", "resourcegroup", "Recommended"
+"Subscription","Resourcegroup","NamingPrefix", "Location", "Email", "Scope"
+"My Azure Subscription","rg-arc-prod","prod","westeurope", "mymail@mail.com", "resourcegroup"
