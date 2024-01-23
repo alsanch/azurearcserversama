@@ -229,85 +229,44 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
 
     ## PART 1. Dependency Agent Policies (only needed for Map)
     if ($deployVMInsightsPerfAndMap -eq $true) {
-        $templateBasePath = ".\DataCollection-VMInsights\Policies"
 
-        # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
-        $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
+        # Assign the policies
+    $templateBasePath = ".\DataCollection-VMInsights\Policies"
 
-        # Arc Windows
-        $depAgentPolicyNameArcWindows = "[MON] Configure Dependency agent on Azure Arc enabled Windows servers"
-        $templateFileDepAgentArcWindows = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Windows servers.json"
-        $deploymentNameDepAgentArcWindows = "assign_policy_$($depAgentPolicyNameArcWindows)".Replace(' ', '').Replace('[MON]', '')
-        $deploymentNameDepAgentArcWindows = $deploymentNameDepAgentArcWindows.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentArcWindows.Length))
+    # Get the AzurePolicies ARM template files
+    $azurePoliciesCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
 
-        # Arc Linux
-        $depAgentPolicyNameArcLinux = "[MON] Configure Dependency agent on Azure Arc enabled Linux servers"
-        $templateFileDepAgentArcLinux = "$templateBasePath\Configure Dependency agent on Azure Arc enabled Linux servers.json"
-        $deploymentNameDepAgentArcLinux = "assign_policy_$($depAgentPolicyNameArcLinux)".Replace(' ', '').Replace('[MON]', '')
-        $deploymentNameDepAgentArcLinux = $deploymentNameDepAgentArcLinux.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentArcLinux.Length))
+    # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
+    $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
+        
+    ## Per each policy
+    foreach ($azurePolicyItem in $azurePoliciesCollection) {
 
-        # Azure VMs
-        if ($deployForAzureVMs -eq $true) {
-            # Azure VMs Windows
-            $depAgentPolicyNameAzWindows = "[MON] Configure Dependency agent on Azure Windows servers"
-            $templateFileDepAgentAzWindows = "$templateBasePath\Configure Dependency agent on Azure Windows servers.json"
-            $deploymentNameDepAgentAzWindows = "assign_policy_$($depAgentPolicyNameAzWindows)".Replace(' ', '').Replace('[MON]', '')
-            $deploymentNameDepAgentAzWindows = $deploymentNameDepAgentAzWindows.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentAzWindows.Length))
-
-            # Azure VMs Linux
-            $depAgentPolicyNameAzLinux = "[MON] Configure Dependency agent on Azure Linux servers"
-            $templateFileDepAgentAzLinux = "$templateBasePath\Configure Dependency agent on Azure Linux servers.json"
-            $deploymentNameDepAgentAzLinux = "assign_policy_$($depAgentPolicyNameAzLinux)".Replace(' ', '').Replace('[MON]', '')
-            $deploymentNameDepAgentAzLinux = $deploymentNameDepAgentAzLinux.substring(0, [System.Math]::Min(63, $deploymentNameDepAgentAzLinux.Length))
+        # Skip Azure VMs Policies if deployment for AzureVMs is not required
+        if (($deployForAzureVMs -eq $false) -And ($azurePolicyItem -notlike "*Arc*" -eq $true)) {
+            continue
         }
+        
+        $azurePolicyName = "[MON] " + $($azurePolicyItem.Name).Split(".")[0]
+        $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
+        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
         # Assign the policy at resource group/subscription scope
-        Write-Host "Assigning Azure Policy: $depAgentPolicyNameArcWindows"
-        Write-Host "Assigning Azure Policy: $depAgentPolicyNameArcLinux"
+        Write-Host "Assigning Azure Policy: $azurePolicyName"
         if ($policiesScope -eq "subscription") {
-            # Arc Windows
-            New-AzDeployment -Name $deploymentNameDepAgentArcWindows -location $location -TemplateFile $templateFileDepAgentArcWindows `
-                -policyAssignmentName $depAgentPolicyNameArcWindows -resourceGroupID $resourceGroupID | Out-Null
-            # Arc Linux
-            New-AzDeployment -Name $deploymentNameDepAgentArcLinux -location $location -TemplateFile $templateFileDepAgentArcLinux `
-                -policyAssignmentName $depAgentPolicyNameArcLinux -resourceGroupID $resourceGroupID | Out-Null
-
-            # Azure VMs
-            if ($deployForAzureVMs -eq $true) {
-                Write-Host "Assigning Azure Policy: $depAgentPolicyNameAzWindows"
-                Write-Host "Assigning Azure Policy: $depAgentPolicyNameAzLinux"
-                # Azure VMs Windows
-                New-AzDeployment -Name $deploymentNameDepAgentAzWindows -location $location -TemplateFile $templateFileDepAgentAzWindows `
-                    -policyAssignmentName $depAgentPolicyNameAzWindows -resourceGroupID $resourceGroupID | Out-Null
-                # Azure VMs Linux
-                New-AzDeployment -Name $deploymentNameDepAgentAzLinux -location $location -TemplateFile $templateFileDepAgentAzLinux `
-                    -policyAssignmentName $depAgentPolicyNameAzLinux -resourceGroupID $resourceGroupID | Out-Null
-            }
+            # Azure Arc-enabled servers
+            New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
+                -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID | Out-Null
         }
         elseif ($policiesScope -eq "resourcegroup") {
-            # Arc Windows
-            New-AzResourceGroupDeployment -Name $deploymentNameDepAgentArcWindows -ResourceGroupName $resourceGroup `
-                -TemplateFile $templateFileDepAgentArcWindows -location $location -policyAssignmentName $depAgentPolicyNameArcWindows `
+            # Azure Arc-enabled servers
+            New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
+                -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
                 -resourceGroupID $resourceGroupID | Out-Null
-            # Arc Linux
-            New-AzResourceGroupDeployment -Name $deploymentNameDepAgentArcLinux -ResourceGroupName $resourceGroup `
-                -TemplateFile $templateFileDepAgentArcLinux -location $location -policyAssignmentName $depAgentPolicyNameArcLinux `
-                -resourceGroupID $resourceGroupID | Out-Null
-
-            # Azure VMs
-            if ($deployForAzureVMs -eq $true) {
-                Write-Host "Assigning Azure Policy: $depAgentPolicyNameAzWindows"
-                Write-Host "Assigning Azure Policy: $depAgentPolicyNameAzLinux"
-                # Azure VMs Windows
-                New-AzResourceGroupDeployment -Name $deploymentNameDepAgentAzWindows -ResourceGroupName $resourceGroup `
-                    -TemplateFile $templateFileDepAgentAzWindows -location $location -policyAssignmentName $depAgentPolicyNameAzWindows `
-                    -resourceGroupID $resourceGroupID | Out-Null
-                # Azure VMs Linux
-                New-AzResourceGroupDeployment -Name $deploymentNameDepAgentAzLinux -ResourceGroupName $resourceGroup `
-                    -TemplateFile $templateFileDepAgentAzLinux -location $location -policyAssignmentName $depAgentPolicyNameAzLinux `
-                    -resourceGroupID $resourceGroupID | Out-Null
-            }
         }
+    }
+        
     }
 
     ## PART 2. Deploy Data Collection Rules
