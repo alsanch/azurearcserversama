@@ -10,7 +10,7 @@
         },
         "policyAssignmentName": {
             "type": "string",
-            "defaultValue": "[guid(parameters('policyDefinitionID'),parameters('resourceGroupID'))]",
+            "defaultValue": "[guid(parameters('policyDefinitionID'))]",
             "metadata": {
                 "description": "Specifies the name of the policy assignment, can be used defined or an idempotent name as the defaultValue provides."
             }
@@ -24,7 +24,7 @@
         },
         "policyDefinitionID": {
             "type": "string",
-            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/4da21710-ce6f-4e06-8cdb-5cc4c93ffbee",
+            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/84cfed75-dfd4-421b-93df-725b479d356a",
             "metadata": {
                 "description": "Specifies the ID of the policy definition or policy set definition being assigned."
             }

@@ -230,7 +230,7 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
     ## PART 1. Dependency Agent Policies (only needed for Map)
     if ($deployVMInsightsPerfAndMap -eq $true) {
 
-        # Assign the policies
+    # Assign the policies
     $templateBasePath = ".\DataCollection-VMInsights\Policies"
 
     # Get the AzurePolicies ARM template files
@@ -318,8 +318,8 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
             $azDeploymentNameWindows = $azDeploymentNameWindows.substring(0, [System.Math]::Min(63, $azDeploymentNameWindows.Length))
 
             # Associate Azure Linux VMInsights DCR via Azure Policy
-            $azAzurePolicyNameLinux = "[MON] Configure Linux Arc Machine to be associated with " + $DCR.Name
-            $azTemplateFileLinux = ".\Policies\Configure Linux Arc Machine to be associated with a DCR.json"
+            $azAzurePolicyNameLinux = "[MON] Configure Linux Machine to be associated with " + $DCR.Name
+            $azTemplateFileLinux = ".\Policies\Configure Linux Machine to be associated with a DCR.json"
             $azDeploymentNameLinux = "assign_policy_$($azAzurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
             $azDeploymentNameLinux = $azDeploymentNameLinux.substring(0, [System.Math]::Min(63, $azDeploymentNameLinux.Length))  
         }

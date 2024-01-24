@@ -24,7 +24,7 @@
         },
         "policyDefinitionID": {
             "type": "string",
-            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/deacecc0-9f84-44d2-bb82-46f32d766d43",
+            "defaultValue": "/providers/Microsoft.Authorization/policyDefinitions/08a4470f-b26d-428d-97f4-7e3e9c92b366",
             "metadata": {
                 "description": "Specifies the ID of the policy definition or policy set definition being assigned."
             }
