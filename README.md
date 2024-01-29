@@ -26,23 +26,13 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
     - **Syslog:** auth; authpriv; daemon; kern
     - **Linux Performance Counters:** Logical Disk(*)\% Used Inodes; Memory(*)\% Used Swap Space
 - **VM insights**: by using the deployment script parameters, you can choose whether to enable just *InsightsMetrics* or *InsigthsMetrics* and *Map*.
-- **Automation Account, links it to the Log Analytics Workspace for Azure Monitor, and includes:**
-    - Change Tracking with "Enable on all available and future machines" enabled
-    - Inventory with "Enable on all available and future machines" enabled
-    - Update Management with "Enable on all available and future machines" enabled
-    - Runbook called AutoRemediatePolicyLAAgentAzureArcServers.ps1, that triggers a remediation task for the policies "Configure Log Analytics extension on Azure Arc enabled Windows/Linux servers" and "Configure Dependency agent on Azure Arc enabled Windows/Linux servers" when there are pending resources to be remediated
-      - Schedule to trigger the runbook once per day at 23:00:00 local time
-      - Managed Identity with Resource Policy Contributor permissions at subscription/resource group level to trigger the remediation task
+- **Change tracking and Inventory with AMA**
+- **Azure Update Manager**
+- **SQL Best Practices Analyzer for Azure Arc-enabled servers** enabled via Azure Policy
 - **Azure Monitor action group with an email action**
-- **Azure Monitor alerts:** heartbeatMissed; logicalDiskAvgDiskSecRead; logicalDiskAvgDiskSecWrite; logicalDiskCurrentQueueLength; logicalDiskFreeSpacePercent; logicalDiskIdleTimePercent; memoryAvailableMBytes; memoryCommitedBytesInUsePercent; memoryPagesPerSec; processorTimePercent; unexpectedSystemShutdown
-- **Azure Workbooks:** AlertsConsole; OSPerformanceAndCapacity; WindowsEvents; WindowsUpdates
+- **Azure Monitor alerts:** heartbeatMissed; logicalDiskFreeSpacePercent; memoryAvailableMBytes; memoryAvailablePercent; processorTimePercent; unexpectedSystemShutdown
+- **Azure Workbooks:** AlertsConsole; OSPerformanceAndCapacity; WindowsEvents
 - **Azure Dashboard that provides a monitoring overview for your Azure Arc-enabled servers**
-- **Azure Policies, with auto-remediation enabled and a system managed identity assigned:**
-    - Configure Log Analytics extension on Azure Arc enabled Windows servers
-    - Configure Log Analytics extension on Azure Arc enabled Linux servers
-    - Configure Dependency agent on Azure Arc enabled Windows servers
-    - Configure Dependency agent on Azure Arc enabled Linux servers
-    - Configure Arc-enabled machines running SQL Server to have SQL Server extension installed
 
 ## Requirements
 - **Tested in Powershell 7.4.0 and Azure Az 7.0.0 PowerShell module**
