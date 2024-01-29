@@ -68,4 +68,3 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
 ## References
 - **Azure Arc-enabled servers:** https://docs.microsoft.com/en-us/azure/azure-arc/servers/
 - **Azure Arc Jumpstart:** https://azurearcjumpstart.io/
-- **Jumpstart ArcBox:** https://azurearcjumpstart.io/azure_jumpstart_arcbox/
