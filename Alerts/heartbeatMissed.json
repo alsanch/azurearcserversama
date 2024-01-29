@@ -102,14 +102,14 @@
         },
         "windowSize": {
             "type": "string",
-            "defaultValue": "PT5M",
+            "defaultValue": "PT15M",
             "metadata": {
                 "description": "Period of time used to monitor alert activity based on the threshold. Must be between five minutes and one day. ISO 8601 duration format."
             }
         },
         "evaluationFrequency": {
             "type": "string",
-            "defaultValue": "PT5M",
+            "defaultValue": "PT15M",
             "metadata": {
                 "description": "how often the metric alert is evaluated represented in ISO 8601 duration format"
             }
