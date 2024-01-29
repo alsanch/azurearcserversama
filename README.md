@@ -15,12 +15,17 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
 
 ## What resources are deployed?
 - **Log Analytics Workspace for Azure Monitor**
-- **Data Sources in the Log Analytics Workspace for Azure Monitor**
+- **Azure Monitor Agent (AMA) Policies**
+    - Configure Windows Arc-enabled machines to run Azure Monitor Agent
+    - Configure Linux Arc-enabled machines to run Azure Monitor Agent
+    - Configure Windows virtual machines to run Azure Monitor Agent using system-assigned managed identity
+    - Configure Linux virtual machines to run Azure Monitor Agent with system-assigned managed identity
+- **Data Collection Rules (DCRs) for:**
     - **Windows Events:** System, Application
-    - **Windows Performance Counters:** LogicalDisk(*)\% Free Space; LogicalDisk(*)\Avg. Disk sec/Read; LogicalDisk(*)\Avg. Disk sec/Write; LogicalDisk(*)\Current Disk Queue Length; LogicalDisk(*)\Disk Reads/sec; LogicalDisk(*)\Disk Transfers/sec; LogicalDisk(*)\Disk Writes/sec; LogicalDisk(*)\Free Megabytes; Memory(*)\% Committed Bytes In Use; Memory(*)\Available MBytes; Memory(*)\Pages/sec; Network Adapter(*)\Bytes Received/sec; Network Adapter(*)\Bytes Sent/sec; Network Adapter(*)\Bytes Total/sec; Process(*)\% Processor Time; Processor(*)\% Processor Time; System(*)\Processor Queue Length
-    - **Linux Performance Counters:** Logical Disk(*)\% Used Inodes; Logical Disk(*)\% Used Space; Logical Disk(*)\Disk Reads/sec; Logical Disk(*)\Disk Transfers/sec; Logical Disk(*)\Disk Transfers/sec; Logical Disk(*)\Free Megabytes; Memory(*)\% Used Memory; Memory(*)\% Used Swap Space; Memory(*)\Available MBytes Memory; Network(*)\Total Bytes Received; Network(*)\Total Bytes Transmitted; Processor(*)\%Privileged Time; Processor(*)\% Processor Time
-    - **Syslog:** daemon; kern
-- **VM insights in the Log Analytics Workspace for Azure Monitor**
+    - **Windows Performance Counters:** Memory(*)\Pages/sec; Process(*)\% Processor Time; System(*)\Processor Queue Length
+    - **Syslog:** auth; authpriv; daemon; kern
+    - **Linux Performance Counters:** Logical Disk(*)\% Used Inodes; Memory(*)\% Used Swap Space
+- **VM insights**: by using the deployment script parameters, you can choose whether to enable just *InsightsMetrics* or *InsigthsMetrics* and Map.
 - **Automation Account, links it to the Log Analytics Workspace for Azure Monitor, and includes:**
     - Change Tracking with "Enable on all available and future machines" enabled
     - Inventory with "Enable on all available and future machines" enabled
