@@ -25,7 +25,7 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
     - **Windows Performance Counters:** Memory(*)\Pages/sec; Process(*)\% Processor Time; System(*)\Processor Queue Length
     - **Syslog:** auth; authpriv; daemon; kern
     - **Linux Performance Counters:** Logical Disk(*)\% Used Inodes; Memory(*)\% Used Swap Space
-- **VM insights**: by using the deployment script parameters, you can choose whether to enable just *InsightsMetrics* or *InsigthsMetrics* and Map.
+- **VM insights**: by using the deployment script parameters, you can choose whether to enable just *InsightsMetrics* or *InsigthsMetrics* and *Map*.
 - **Automation Account, links it to the Log Analytics Workspace for Azure Monitor, and includes:**
     - Change Tracking with "Enable on all available and future machines" enabled
     - Inventory with "Enable on all available and future machines" enabled
