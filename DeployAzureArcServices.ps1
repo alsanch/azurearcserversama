@@ -185,11 +185,11 @@ if ($deployDataCollectionPerfEvents -eq $true) {
         Write-Host "Assigning Azure Policy: $arcAzurePolicyName"
         if ($policiesScope -eq "subscription") {
 
-            # Azure Arc Windows VMs
+            # Azure Arc
             New-AzDeployment -Name $arcDeploymentName -location $location -TemplateFile $arcTemplateFile `
                 -policyAssignmentName $arcAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
 
-            # Deployment for Azure Windows VMs
+            # Azure VMs
             if ($deployForAzureVMs -eq $true) {
                 Write-Host "Assigning Azure Policy: $azAzurePolicyName"
                 New-AzDeployment -Name $azDeploymentName -location $location -TemplateFile $azTemplateFile `
@@ -198,16 +198,17 @@ if ($deployDataCollectionPerfEvents -eq $true) {
         }
         elseif ($policiesScope -eq "resourcegroup") {
             
-            # Azure Arc Linux VMs
+            # Azure Arc
             New-AzResourceGroupDeployment -Name $arcDeploymentName -ResourceGroupName $resourceGroup `
                 -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcAzurePolicyName `
                 -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
 
-            # Deployment for Azure Linux VMs
+            # Azure VMs
             if ($deployForAzureVMs -eq $true) {
                 Write-Host "Assigning Azure Policy: $azAzurePolicyName"
-                New-AzDeployment -Name $azDeploymentName -location $location -TemplateFile $azTemplateFile `
-                    -policyAssignmentName $azAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                New-AzResourceGroupDeployment -Name $azDeploymentName -ResourceGroupName $resourceGroup `
+                -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azAzurePolicyName `
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
             }
         }
     }
