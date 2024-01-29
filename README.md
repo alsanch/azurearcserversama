@@ -1,4 +1,4 @@
-# Azure Arc-enabled servers - Hybrid Monitoring & Security
+# Azure Arc-enabled servers & Azure VMs - Hybrid Monitoring & Security
 ## Content
 - [Overview](https://github.com/alsanch/azurearcservers#overview)
 - [What resources are deployed?](https://github.com/alsanch/azurearcservers#what-resources-are-deployed)
@@ -9,7 +9,7 @@
 - [References](https://github.com/alsanch/azurearcservers#references)
 
 ## Overview
-Azure Arc enables you to manage your entire environment, with a single pane of glass, by projecting your existing non-Azure, on-premises, or other-cloud resources into Azure Resource Manager. The first step is to onboard your on-premises servers into Azure Arc. Once your on-premises servers are onboarded, you can benefit from native Azure services like Azure Policy, Azure Monitor, Azure Automation and Microsoft Defender for Cloud. This project helps you on automating the deployment of these Azure Services. 
+Azure Arc enables you to manage your entire environment, with a single pane of glass, by projecting your existing non-Azure, on-premises, or other-cloud resources into Azure Resource Manager. The first step is to onboard your on-premises servers into Azure Arc. Once your on-premises servers are onboarded, you can benefit from native Azure services like Azure Policy, Azure Monitor, Azure Automation and Microsoft Defender for Cloud. This project helps you on automating the deployment of these Azure Services. The same services can be deployed for Azure Virtual Machines as long as the *$deployForAzureVMs* parameter is *$true*
 
 **Note:** the Azure Services deployed in this project could also be used for Azure VMs as long as they are connected to the Log Analytics Workspace for Azure Monitor. 
 
@@ -38,20 +38,10 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
     - Configure Dependency agent on Azure Arc enabled Windows servers
     - Configure Dependency agent on Azure Arc enabled Linux servers
     - Configure Arc-enabled machines running SQL Server to have SQL Server extension installed
-- **Required settings for Microsoft Defender for Cloud & Azure Arc-enabled servers**
-    - Deploys a Log Analyics Workspace for Security data
-    - Enables the Security insights solution in the Log Analyics Workspace for Security data
-    - Enables the collection of Security Events in the Log Analytics Workspace for Security data
-    - Enables Microsoft Defender for Cloud for Servers at subscription level
-    - Enables the notification settings at subscription level
-
-**Note**: for **Microsoft Sentinel** deployment, please, refer to the project **Azure Sentinel All In One** (https://github.com/Azure/Azure-Sentinel/tree/master/Tools/Sentinel-All-In-One). You could deploy it on the previous Log Analytics Workspace for Security Data.
 
 ## Requirements
-- **Tested in Powershell 5.1 and Azure Az 7.0.0 PowerShell module**
-- **Azure Permissions:** Owner
-    - Role required to assign the Resource Policy Contributor role to the Automation Account managed identity
-    - Required at subscription level if Microsoft Defender for Cloud is deployed. Otherwise, at resource group level
+- **Tested in Powershell 7.4.0 and Azure Az 7.0.0 PowerShell module**
+- **Azure Permissions:** Under construction
 - **Azure AD Permissions:** User
 
 ## Deployment steps
@@ -62,18 +52,12 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
     - **Location:** Azure Region where the framework is deployed
     - **Email:** email account used in the Action Group for alerts and in the Microsoft Defender for Cloud notification settings
     - **Scope:** scope at which the Azure Policies and the Automation Account managed identity permissions are assigned. Allowed values: "subscription", "resourcegroup"
-    - **SecurityCollectionTier:** SecurityEvent logging level. Allowed values: "All", "Recommended", "Minimal", "None"
 2. Open PowerShell and **change your working directory** to the project directory
 3. Run **Login-AzAccount**
 4. Run **DeployAzureArcServices.ps1**
 
 **Note**: you can enable/disable what's deployed in this framework by using the deployment variables within DeployAzureArcServices.ps1.
 
-## Limitations
-- The following two Azure Policies will not work if the servers already have a connection to a Log Analytics workspace (multi-homing is not supported in the MMA extension)
-    - Configure Log Analytics extension on Azure Arc enabled Windows servers
-    - Configure Log Analytics extension on Azure Arc enabled Linux servers
-- The framework does not deploy a second log analytics connection from the Azure Arc-enabled servers to the Security Log Analytis Workspace. (Work in Progress)
 
 ## Screenshots
 ![image](https://user-images.githubusercontent.com/96136892/149989258-91061aae-c1f1-4624-9f16-c6ac5d37b43d.png)
