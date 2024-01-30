@@ -11,6 +11,7 @@ $deployAlerts = $true
 $deployWorkbooks = $true
 $deployDashboard = $true
 $deploySQLBPA = $true
+$deployAutomationAccount = $true
 
 # Deploys for Azure VMs the same services selected for Azure Arc-enabled servers
 $deployForAzureVMs = $true
@@ -25,8 +26,9 @@ $location = $parametersFileInput.Location
 $policiesScope = $parametersFileInput.Scope
 $emailAddress = $parametersFileInput.Email
 $MonitorWSName = $namingPrefix + "-la-monitor"
-$ActionGroupName = $namingPrefix + "-ag-arc"
-$ActionGroupShortName = $namingPrefix + "-agarc"
+$ActionGroupName = $namingPrefix + "-ag"
+$ActionGroupShortName = $namingPrefix + "-ag"
+$AutomationAccountName = $namingPrefix + "-aa"
 
 # Option to interrupt the deployment  
 Write-Host -ForegroundColor Green "STARTING THE DEPLOYMENT"
@@ -92,7 +94,7 @@ if ($deployAMAagents -eq $true) {
         
         $azurePolicyName = "[MON][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
         $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
-        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
+        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
         $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
         # Assign the policy at resource group/subscription scope
@@ -156,12 +158,12 @@ if ($deployDataCollectionPerfEvents -eq $true) {
             
             # Deployment for Azure Windows VMs
             if ($deployForAzureVMs -eq $true) {
-                $azAzurePolicyName = "[MON[" + $namingPrefix + "] Configure Windows Machine to be associated with " + $DCR.Name
+                $azAzurePolicyName = "[MON][" + $namingPrefix + "] Configure Windows Machine to be associated with " + $DCR.Name
                 $azTemplateFile = "$templateBasePath\Configure Windows Machine to be associated with a DCR.json"
             }
         }
         elseif ($DCR.Name -like "*Linux*") {
-            $arcAzurePolicyName = "[MON[" + $namingPrefix + "] Configure Linux Arc Machine to be associated with " + $DCR.Name
+            $arcAzurePolicyName = "[MON][" + $namingPrefix + "] Configure Linux Arc Machine to be associated with " + $DCR.Name
             $arcTemplateFile = "$templateBasePath\Configure Linux Arc Machine to be associated with a DCR.json"
             
             # Deployment for Azure Linux VMs
@@ -172,12 +174,12 @@ if ($deployDataCollectionPerfEvents -eq $true) {
         }
         
         # Deployment for Azure Arc VMs
-        $arcDeploymentName = "assign_policy_$($arcAzurePolicyName)".Replace(' ', '').Replace('[MON]', '')
+        $arcDeploymentName = "assign_policy_$($arcAzurePolicyName)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
         $arcDeploymentName = $arcDeploymentName.substring(0, [System.Math]::Min(63, $arcDeploymentName.Length))
 
         # Deployment for Azure VMs
         if ($deployForAzureVMs -eq $true) {
-            $azDeploymentName = "assign_policy_$($azAzurePolicyName)".Replace(' ', '').Replace('[MON]', '')
+            $azDeploymentName = "assign_policy_$($azAzurePolicyName)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
             $azDeploymentName = $azDeploymentName.substring(0, [System.Math]::Min(63, $azDeploymentName.Length))
         }
 
@@ -207,8 +209,8 @@ if ($deployDataCollectionPerfEvents -eq $true) {
             if ($deployForAzureVMs -eq $true) {
                 Write-Host "Assigning Azure Policy: $azAzurePolicyName"
                 New-AzResourceGroupDeployment -Name $azDeploymentName -ResourceGroupName $resourceGroup `
-                -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azAzurePolicyName `
-                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azAzurePolicyName `
+                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
             }
         }
     }
@@ -231,42 +233,42 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
     ## PART 1. Dependency Agent Policies (only needed for Map)
     if ($deployVMInsightsPerfAndMap -eq $true) {
 
-    # Assign the policies
-    $templateBasePath = ".\DataCollection-VMInsights\Policies"
+        # Assign the policies
+        $templateBasePath = ".\DataCollection-VMInsights\Policies"
 
-    # Get the AzurePolicies ARM template files
-    $azurePoliciesCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
+        # Get the AzurePolicies ARM template files
+        $azurePoliciesCollection = $(Get-ChildItem -Path $templateBasePath | Where-Object { $_.name -like "*.json" })
 
-    # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
-    $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
+        # Parameter to make unique Microsoft.Authorization/roleAssignments name at tenant level
+        $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
         
-    ## Per each policy
-    foreach ($azurePolicyItem in $azurePoliciesCollection) {
+        ## Per each policy
+        foreach ($azurePolicyItem in $azurePoliciesCollection) {
 
-        # Skip Azure VMs Policies if deployment for AzureVMs is not required
-        if (($deployForAzureVMs -eq $false) -And ($azurePolicyItem -notlike "*Arc*" -eq $true)) {
-            continue
-        }
+            # Skip Azure VMs Policies if deployment for AzureVMs is not required
+            if (($deployForAzureVMs -eq $false) -And ($azurePolicyItem -notlike "*Arc*" -eq $true)) {
+                continue
+            }
         
-        $azurePolicyName = "[MON][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
-        $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
-        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
-        $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
+            $azurePolicyName = "[MON][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
+            $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
+            $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
+            $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
-        # Assign the policy at resource group/subscription scope
-        Write-Host "Assigning Azure Policy: $azurePolicyName"
-        if ($policiesScope -eq "subscription") {
-            # Azure Arc-enabled servers
-            New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
-                -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID | Out-Null
+            # Assign the policy at resource group/subscription scope
+            Write-Host "Assigning Azure Policy: $azurePolicyName"
+            if ($policiesScope -eq "subscription") {
+                # Azure Arc-enabled servers
+                New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
+                    -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID | Out-Null
+            }
+            elseif ($policiesScope -eq "resourcegroup") {
+                # Azure Arc-enabled servers
+                New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
+                    -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
+                    -resourceGroupID $resourceGroupID | Out-Null
+            }
         }
-        elseif ($policiesScope -eq "resourcegroup") {
-            # Azure Arc-enabled servers
-            New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
-                -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
-                -resourceGroupID $resourceGroupID | Out-Null
-        }
-    }
         
     }
 
@@ -301,13 +303,13 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
         # Associate Arc Windows VMInsights DCR via Azure Policy
         $arcAzurePolicyNameWindows = "[MON][" + $namingPrefix + "] Configure Windows Arc Machine to be associated with " + $DCR.Name
         $arcTemplateFileWindows = ".\Policies\Configure Windows Arc Machine to be associated with a DCR.json"
-        $arcDeploymentNameWindows = "assign_policy_$($arcAzurePolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
+        $arcDeploymentNameWindows = "assign_policy_$($arcAzurePolicyNameWindows)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
         $arcDeploymentNameWindows = $arcDeploymentNameWindows.substring(0, [System.Math]::Min(63, $arcDeploymentNameWindows.Length))
 
         # Associate Arc Linux VMInsights DCR via Azure Policy
         $arcAzurePolicyNameLinux = "[MON][" + $namingPrefix + "] Configure Linux Arc Machine to be associated with " + $DCR.Name
         $arcTemplateFileLinux = ".\Policies\Configure Linux Arc Machine to be associated with a DCR.json"
-        $arcDeploymentNameLinux = "assign_policy_$($arcAzurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
+        $arcDeploymentNameLinux = "assign_policy_$($arcAzurePolicyNameLinux)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
         $arcDeploymentNameLinux = $arcDeploymentNameLinux.substring(0, [System.Math]::Min(63, $arcDeploymentNameLinux.Length))  
         
         # Azure VMs
@@ -315,13 +317,13 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
             # Associate Azure Windows VMInsights DCR via Azure Policy
             $azAzurePolicyNameWindows = "[MON][" + $namingPrefix + "] Configure Windows Machine to be associated with " + $DCR.Name
             $azTemplateFileWindows = ".\Policies\Configure Windows Machine to be associated with a DCR.json"
-            $azDeploymentNameWindows = "assign_policy_$($azAzurePolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
+            $azDeploymentNameWindows = "assign_policy_$($azAzurePolicyNameWindows)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
             $azDeploymentNameWindows = $azDeploymentNameWindows.substring(0, [System.Math]::Min(63, $azDeploymentNameWindows.Length))
 
             # Associate Azure Linux VMInsights DCR via Azure Policy
             $azAzurePolicyNameLinux = "[MON][" + $namingPrefix + "] Configure Linux Machine to be associated with " + $DCR.Name
             $azTemplateFileLinux = ".\Policies\Configure Linux Machine to be associated with a DCR.json"
-            $azDeploymentNameLinux = "assign_policy_$($azAzurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
+            $azDeploymentNameLinux = "assign_policy_$($azAzurePolicyNameLinux)".Replace(' ', '').Replace("[MON][" + $namingPrefix + "]", '')
             $azDeploymentNameLinux = $azDeploymentNameLinux.substring(0, [System.Math]::Min(63, $azDeploymentNameLinux.Length))  
         }
 
@@ -425,7 +427,7 @@ if ($deployChangeTrackingAndInventory -eq $true) {
         
         $azurePolicyName = "[CT][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
         $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
-        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[CT]', '')
+        $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace("[CT][" + $namingPrefix + "]", '')
         $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
         # Assign the policy at resource group/subscription scope
@@ -461,12 +463,12 @@ if ($deployUpdateManager -eq $true) {
     $arcTemplateFile = "$templateBasePath\Configure periodic checking for missing system updates on azure Arc-enabled servers.json"
     # Windows Update Assessment Policy Assignment
     $arcPolicyNameWindows = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Windows Arc-enabled servers"
-    $arcDeploymentNameWindows = "assign_policy_windows$($arcPolicyNameWindows)".Replace(' ', '').Replace('[UM]', '')
+    $arcDeploymentNameWindows = "assign_policy_windows$($arcPolicyNameWindows)".Replace(' ', '').Replace("[UM][" + $namingPrefix + "]", '')
     $arcDeploymentNameWindows = $arcDeploymentNameWindows.substring(0, [System.Math]::Min(63, $arcDeploymentNameWindows.Length))
 
     # Linux Update Assessment Policy Assignment
     $arcPolicyNameLinux = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Linux Arc-enabled servers"
-    $arcDeploymentNameLinux = "assign_policy_linux$($arcPolicyNameLinux)".Replace(' ', '').Replace('[UM]', '')
+    $arcDeploymentNameLinux = "assign_policy_linux$($arcPolicyNameLinux)".Replace(' ', '').Replace("[UM][" + $namingPrefix + "]", '')
     $arcDeploymentNameLinux = $arcDeploymentNameLinux.substring(0, [System.Math]::Min(63, $arcDeploymentNameLinux.Length))
 
     # Azure VMs
@@ -475,12 +477,12 @@ if ($deployUpdateManager -eq $true) {
         $azTemplateFile = "$templateBasePath\Configure periodic checking for missing system updates on azure virtual machines.json"
         # Windows Update Assessment Policy Assignment
         $azPolicyNameWindows = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Windows servers"
-        $azDeploymentNameWindows = "assign_policy_windows$($azPolicyNameWindows)".Replace(' ', '').Replace('[UM]', '')
+        $azDeploymentNameWindows = "assign_policy_windows$($azPolicyNameWindows)".Replace(' ', '').Replace("[UM][" + $namingPrefix + "]", '')
         $azDeploymentNameWindows = $azDeploymentNameWindows.substring(0, [System.Math]::Min(63, $azDeploymentNameWindows.Length))
 
         # Linux Update Assessment Policy Assignment
         $azPolicyNameLinux = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Linux servers"
-        $azDeploymentNameLinux = "assign_policy_linux$($azPolicyNameLinux)".Replace(' ', '').Replace('[UM]', '')
+        $azDeploymentNameLinux = "assign_policy_linux$($azPolicyNameLinux)".Replace(' ', '').Replace("[UM][" + $namingPrefix + "]", '')
         $azDeploymentNameLinux = $azDeploymentNameLinux.substring(0, [System.Math]::Min(63, $azDeploymentNameLinux.Length))
     }
 
@@ -550,7 +552,7 @@ if ($deploySQLBPA -eq $true) {
 
     # Windows Update Assessment Policy Assignment
     $azurePolicyName = "[SQL][" + $namingPrefix + "] Configure Arc-enabled Servers with SQL Server extension installed to enable SQL best practices assessment"
-    $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[SQL]', '')
+    $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace("[SQL][" + $namingPrefix + "]", '')
     $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
     # Assign the policy at resource group/subscription scope
@@ -653,6 +655,72 @@ if ($deployDashboard -eq $true) {
     Write-Host "Deploying the Azure Dashboard"
     New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
         -workspaceName $MonitorWSName -location $location -dashboardName $dashboardName | Out-Null    
+}
+else {
+    Write-Host "Skipped"
+}
+#endregion
+
+#region ### Automation account related resources
+Write-Host ""
+Write-Host -ForegroundColor Cyan "Deploying the Automation Account and related resources"
+if ($deployAutomationAccount -eq $true) {
+    $deploymentName = "deploy_automation_account"
+    $templateFile = ".\AutomationAccount\automationAccount.json"
+    $managedIdentityScope = $parametersFileInput.Scope
+
+    # Deploy and link the automation account
+    Write-Host "Deploying the automation account"
+    New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+        -automationAccountName $automationAccountName -location $location | Out-Null
+
+    # Create and publish the runbook
+    $runbookName = "AutoRemediateFrameworkPolicies"
+    $runbookType = "PowerShell"
+    $runbookCodePath = ".\AutomationAccount\Runbook\AutoRemediateFrameworkPolicies.ps1"
+    Write-Host "Importing the required runbooks"
+    Import-AzAutomationRunbook -AutomationAccountName $automationAccountName -ResourceGroupName $resourceGroup  -Name $runbookName `
+        -Type $runbookType -Path $runbookCodePath | Out-null 
+           
+    Write-Host "Publishing the required runbooks"
+    Publish-AzAutomationRunbook -AutomationAccountName $automationAccountName -ResourceGroupName $resourceGroup -Name $runbookName | Out-null
+
+    # Create and link the schedule
+    Write-Host "Creating the daily schedule and linking it to the runbook"
+    $StartTime = Get-Date "23:00:00"
+    if ($StartTime -lt (Get-Date)) { $StartTime = $StartTime.AddDays(1) }
+    $EndTime = $StartTime.AddYears(99)
+    $scheduleName = "dailyschedule11pm"
+    $TimeZone = ([System.TimeZoneInfo]::Local).Id
+    New-AzAutomationSchedule -AutomationAccountName $automationAccountName -Name $scheduleName -StartTime $StartTime -ExpiryTime `
+        $EndTime -DayInterval 1 -ResourceGroupName $resourceGroup -TimeZone $TimeZone | Out-null
+    # Policy remedation will happen at subscription or resource group level, depending on the Scope parameter
+    if ($managedIdentityScope -eq "subscription") {
+        Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
+            -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup | Out-null
+    }
+    elseif ($managedIdentityScope -eq "resourcegroup") {
+        Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
+            -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup `
+            -Parameters @{"resourceGroup" = $resourceGroup } | Out-null
+    }    
+
+    # Get automation account managed identity and assign permissions to remediate policies at subscription/resource group level
+
+    #Wait for the system managed identity to be available
+    Write-Host "Waiting for the automation account system managed identity... " -NoNewline
+    while ($null -eq (Get-AzAutomationAccount -ResourceGroupName $resourceGroup -Name $automationAccountName -ErrorAction SilentlyContinue).Identity.PrincipalId) {
+        Write-Host "." -NoNewline
+        Start-Sleep -Seconds 5   
+    }
+    $principalId = (Get-AzAutomationAccount -ResourceGroupName $resourceGroup -Name $automationAccountName).Identity.PrincipalId
+    if ($managedIdentityScope -eq "subscription") {
+        New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Resource Policy Contributor" | Out-null
+    }
+    elseif ($managedIdentityScope -eq "resourcegroup") {
+        New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Resource Policy Contributor" `
+            -ResourceGroupName $resourceGroup | Out-null
+    }
 }
 else {
     Write-Host "Skipped"
