@@ -90,7 +90,7 @@ if ($deployAMAagents -eq $true) {
             continue
         }
         
-        $azurePolicyName = "[MON] " + $($azurePolicyItem.Name).Split(".")[0]
+        $azurePolicyName = "[MON][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
         $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
         $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
         $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
@@ -151,22 +151,22 @@ if ($deployDataCollectionPerfEvents -eq $true) {
     # Assign the policies
     foreach ($DCR in $DCRs) {
         if ($DCR.Name -like "*Windows*") {
-            $arcAzurePolicyName = "[MON] Configure Windows Arc Machine to be associated with " + $DCR.Name
+            $arcAzurePolicyName = "[MON][" + $namingPrefix + "] Configure Windows Arc Machine to be associated with " + $DCR.Name
             $arcTemplateFile = "$templateBasePath\Configure Windows Arc Machine to be associated with a DCR.json"
             
             # Deployment for Azure Windows VMs
             if ($deployForAzureVMs -eq $true) {
-                $azAzurePolicyName = "[MON] Configure Windows Machine to be associated with " + $DCR.Name
+                $azAzurePolicyName = "[MON[" + $namingPrefix + "] Configure Windows Machine to be associated with " + $DCR.Name
                 $azTemplateFile = "$templateBasePath\Configure Windows Machine to be associated with a DCR.json"
             }
         }
         elseif ($DCR.Name -like "*Linux*") {
-            $arcAzurePolicyName = "[MON] Configure Linux Arc Machine to be associated with " + $DCR.Name
+            $arcAzurePolicyName = "[MON[" + $namingPrefix + "] Configure Linux Arc Machine to be associated with " + $DCR.Name
             $arcTemplateFile = "$templateBasePath\Configure Linux Arc Machine to be associated with a DCR.json"
             
             # Deployment for Azure Linux VMs
             if ($deployForAzureVMs -eq $true) {
-                $azAzurePolicyName = "[MON] Configure Linux Machine to be associated with " + $DCR.Name
+                $azAzurePolicyName = "[MON][" + $namingPrefix + "] Configure Linux Machine to be associated with " + $DCR.Name
                 $azTemplateFile = "$templateBasePath\Configure Linux Machine to be associated with a DCR.json"
             }
         }
@@ -248,7 +248,7 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
             continue
         }
         
-        $azurePolicyName = "[MON] " + $($azurePolicyItem.Name).Split(".")[0]
+        $azurePolicyName = "[MON][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
         $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
         $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[MON]', '')
         $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
@@ -299,13 +299,13 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
     foreach ($DCR in $DCRs) {
 
         # Associate Arc Windows VMInsights DCR via Azure Policy
-        $arcAzurePolicyNameWindows = "[MON] Configure Windows Arc Machine to be associated with " + $DCR.Name
+        $arcAzurePolicyNameWindows = "[MON][" + $namingPrefix + "] Configure Windows Arc Machine to be associated with " + $DCR.Name
         $arcTemplateFileWindows = ".\Policies\Configure Windows Arc Machine to be associated with a DCR.json"
         $arcDeploymentNameWindows = "assign_policy_$($arcAzurePolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
         $arcDeploymentNameWindows = $arcDeploymentNameWindows.substring(0, [System.Math]::Min(63, $arcDeploymentNameWindows.Length))
 
         # Associate Arc Linux VMInsights DCR via Azure Policy
-        $arcAzurePolicyNameLinux = "[MON] Configure Linux Arc Machine to be associated with " + $DCR.Name
+        $arcAzurePolicyNameLinux = "[MON][" + $namingPrefix + "] Configure Linux Arc Machine to be associated with " + $DCR.Name
         $arcTemplateFileLinux = ".\Policies\Configure Linux Arc Machine to be associated with a DCR.json"
         $arcDeploymentNameLinux = "assign_policy_$($arcAzurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
         $arcDeploymentNameLinux = $arcDeploymentNameLinux.substring(0, [System.Math]::Min(63, $arcDeploymentNameLinux.Length))  
@@ -313,13 +313,13 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
         # Azure VMs
         if ($deployForAzureVMs -eq $true) {
             # Associate Azure Windows VMInsights DCR via Azure Policy
-            $azAzurePolicyNameWindows = "[MON] Configure Windows Machine to be associated with " + $DCR.Name
+            $azAzurePolicyNameWindows = "[MON][" + $namingPrefix + "] Configure Windows Machine to be associated with " + $DCR.Name
             $azTemplateFileWindows = ".\Policies\Configure Windows Machine to be associated with a DCR.json"
             $azDeploymentNameWindows = "assign_policy_$($azAzurePolicyNameWindows)".Replace(' ', '').Replace('[MON]', '')
             $azDeploymentNameWindows = $azDeploymentNameWindows.substring(0, [System.Math]::Min(63, $azDeploymentNameWindows.Length))
 
             # Associate Azure Linux VMInsights DCR via Azure Policy
-            $azAzurePolicyNameLinux = "[MON] Configure Linux Machine to be associated with " + $DCR.Name
+            $azAzurePolicyNameLinux = "[MON][" + $namingPrefix + "] Configure Linux Machine to be associated with " + $DCR.Name
             $azTemplateFileLinux = ".\Policies\Configure Linux Machine to be associated with a DCR.json"
             $azDeploymentNameLinux = "assign_policy_$($azAzurePolicyNameLinux)".Replace(' ', '').Replace('[MON]', '')
             $azDeploymentNameLinux = $azDeploymentNameLinux.substring(0, [System.Math]::Min(63, $azDeploymentNameLinux.Length))  
@@ -423,7 +423,7 @@ if ($deployChangeTrackingAndInventory -eq $true) {
             continue
         }
         
-        $azurePolicyName = "[CT] " + $($azurePolicyItem.Name).Split(".")[0]
+        $azurePolicyName = "[CT][" + $namingPrefix + "] " + $($azurePolicyItem.Name).Split(".")[0]
         $templateFile = "$templateBasePath\$($azurePolicyItem.Name)"
         $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[CT]', '')
         $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
@@ -460,12 +460,12 @@ if ($deployUpdateManager -eq $true) {
     # Azure Arc-enabled servers
     $arcTemplateFile = "$templateBasePath\Configure periodic checking for missing system updates on azure Arc-enabled servers.json"
     # Windows Update Assessment Policy Assignment
-    $arcPolicyNameWindows = "[UM] Configure periodic checking for missing system updates on Windows Arc-enabled servers"
+    $arcPolicyNameWindows = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Windows Arc-enabled servers"
     $arcDeploymentNameWindows = "assign_policy_windows$($arcPolicyNameWindows)".Replace(' ', '').Replace('[UM]', '')
     $arcDeploymentNameWindows = $arcDeploymentNameWindows.substring(0, [System.Math]::Min(63, $arcDeploymentNameWindows.Length))
 
     # Linux Update Assessment Policy Assignment
-    $arcPolicyNameLinux = "[UM] Configure periodic checking for missing system updates on Linux Arc-enabled servers"
+    $arcPolicyNameLinux = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Linux Arc-enabled servers"
     $arcDeploymentNameLinux = "assign_policy_linux$($arcPolicyNameLinux)".Replace(' ', '').Replace('[UM]', '')
     $arcDeploymentNameLinux = $arcDeploymentNameLinux.substring(0, [System.Math]::Min(63, $arcDeploymentNameLinux.Length))
 
@@ -474,12 +474,12 @@ if ($deployUpdateManager -eq $true) {
         # Azure servers
         $azTemplateFile = "$templateBasePath\Configure periodic checking for missing system updates on azure virtual machines.json"
         # Windows Update Assessment Policy Assignment
-        $azPolicyNameWindows = "[UM] Configure periodic checking for missing system updates on Windows servers"
+        $azPolicyNameWindows = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Windows servers"
         $azDeploymentNameWindows = "assign_policy_windows$($azPolicyNameWindows)".Replace(' ', '').Replace('[UM]', '')
         $azDeploymentNameWindows = $azDeploymentNameWindows.substring(0, [System.Math]::Min(63, $azDeploymentNameWindows.Length))
 
         # Linux Update Assessment Policy Assignment
-        $azPolicyNameLinux = "[UM] Configure periodic checking for missing system updates on Linux servers"
+        $azPolicyNameLinux = "[UM][" + $namingPrefix + "] Configure periodic checking for missing system updates on Linux servers"
         $azDeploymentNameLinux = "assign_policy_linux$($azPolicyNameLinux)".Replace(' ', '').Replace('[UM]', '')
         $azDeploymentNameLinux = $azDeploymentNameLinux.substring(0, [System.Math]::Min(63, $azDeploymentNameLinux.Length))
     }
@@ -549,7 +549,7 @@ if ($deploySQLBPA -eq $true) {
     $resourceGroupID = (Get-AzResourceGroup -Name $resourceGroup).ResourceId
 
     # Windows Update Assessment Policy Assignment
-    $azurePolicyName = "[SQL] Configure Arc-enabled Servers with SQL Server extension installed to enable SQL best practices assessment"
+    $azurePolicyName = "[SQL][" + $namingPrefix + "] Configure Arc-enabled Servers with SQL Server extension installed to enable SQL best practices assessment"
     $deploymentName = "assign_policy_$($azurePolicyName)".Replace(' ', '').Replace('[SQL]', '')
     $deploymentName = $deploymentName.substring(0, [System.Math]::Min(63, $deploymentName.Length))
 
