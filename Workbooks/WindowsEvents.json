@@ -42,7 +42,7 @@
               {
                 "type": 1,
                 "content": {
-                  "json": "# Integration Runtime Events"
+                  "json": "# Windows Event Logs"
                 },
                 "name": "text - 7"
               },
