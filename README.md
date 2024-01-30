@@ -30,7 +30,7 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
 - **[Azure Monitor alerts](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview):** heartbeatMissed; logicalDiskFreeSpacePercent; memoryAvailableMBytes; memoryAvailablePercent; processorTimePercent; unexpectedSystemShutdown
 - **[Azure Workbooks](https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-overview):** AlertsConsole; OSPerformanceAndCapacity; WindowsEvents
 - **[Azure Dashboard](https://learn.microsoft.com/azure/azure-portal/azure-portal-dashboards)** that provides a monitoring overview for your Azure Arc-enabled servers
-- - **Automation Account with:**
+- **Automation Account with:**
     - Runbook called AutoRemediateFrameworkPolicies.ps1, that triggers a remediation task for the policies assigned by this framework when there are pending resources to be remediated
       - Schedule to trigger the runbook once per day at 23:00:00 local time
       - Managed Identity with Resource Policy Contributor permissions at subscription/resource group level to trigger the remediation task
