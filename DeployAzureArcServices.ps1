@@ -715,9 +715,11 @@ if ($deployAutomationAccount -eq $true) {
     }
     $principalId = (Get-AzAutomationAccount -ResourceGroupName $resourceGroup -Name $automationAccountName).Identity.PrincipalId
     if ($managedIdentityScope -eq "subscription") {
+        Write-Host "Assigning Resource Policy Contributor role at subscription level"
         New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Resource Policy Contributor" | Out-null
     }
     elseif ($managedIdentityScope -eq "resourcegroup") {
+        Write-Host "Assigning Resource Policy Contributor role at resource group level"
         New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName "Resource Policy Contributor" `
             -ResourceGroupName $resourceGroup | Out-null
     }
