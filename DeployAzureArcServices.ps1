@@ -102,13 +102,13 @@ if ($deployAMAagents -eq $true) {
         if ($policiesScope -eq "subscription") {
             # Azure Arc-enabled servers
             New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
-                -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         }
         elseif ($policiesScope -eq "resourcegroup") {
             # Azure Arc-enabled servers
             New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
                 -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
-                -resourceGroupID $resourceGroupID | Out-Null
+                -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         }
     }
       
@@ -189,13 +189,13 @@ if ($deployDataCollectionPerfEvents -eq $true) {
 
             # Azure Arc
             New-AzDeployment -Name $arcDeploymentName -location $location -TemplateFile $arcTemplateFile `
-                -policyAssignmentName $arcAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $arcAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
             # Azure VMs
             if ($deployForAzureVMs -eq $true) {
                 Write-Host "Assigning Azure Policy: $azAzurePolicyName"
                 New-AzDeployment -Name $azDeploymentName -location $location -TemplateFile $azTemplateFile `
-                    -policyAssignmentName $azAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -policyAssignmentName $azAzurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             }
         }
         elseif ($policiesScope -eq "resourcegroup") {
@@ -203,14 +203,14 @@ if ($deployDataCollectionPerfEvents -eq $true) {
             # Azure Arc
             New-AzResourceGroupDeployment -Name $arcDeploymentName -ResourceGroupName $resourceGroup `
                 -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcAzurePolicyName `
-                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
             # Azure VMs
             if ($deployForAzureVMs -eq $true) {
                 Write-Host "Assigning Azure Policy: $azAzurePolicyName"
                 New-AzResourceGroupDeployment -Name $azDeploymentName -ResourceGroupName $resourceGroup `
                     -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azAzurePolicyName `
-                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             }
         }
     }
@@ -260,13 +260,13 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
             if ($policiesScope -eq "subscription") {
                 # Azure Arc-enabled servers
                 New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
-                    -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID | Out-Null
+                    -policyAssignmentName $azurePolicyName -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             }
             elseif ($policiesScope -eq "resourcegroup") {
                 # Azure Arc-enabled servers
                 New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
                     -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
-                    -resourceGroupID $resourceGroupID | Out-Null
+                    -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             }
         }
         
@@ -333,10 +333,10 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
         if ($policiesScope -eq "subscription") {
             # Arc Windows
             New-AzDeployment -Name $arcDeploymentNameWindows -location $location -TemplateFile $arcTemplateFileWindows `
-                -policyAssignmentName $arcAzurePolicyNameWindows -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $arcAzurePolicyNameWindows -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             # Arc Linux
             New-AzDeployment -Name $arcDeploymentNameLinux -location $location -TemplateFile $arcTemplateFileLinux `
-                -policyAssignmentName $arcAzurePolicyNameLinux -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $arcAzurePolicyNameLinux -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
             # Azure VMs
             if ($deployForAzureVMs -eq $true) {
@@ -344,21 +344,21 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
                 Write-Host "Assigning Azure Policy: $azAzurePolicyNameLinux"
                 # Azure Windows
                 New-AzDeployment -Name $azDeploymentNameWindows -location $location -TemplateFile $azTemplateFileWindows `
-                    -policyAssignmentName $azAzurePolicyNameWindows -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -policyAssignmentName $azAzurePolicyNameWindows -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
                 # Azure Linux
                 New-AzDeployment -Name $azDeploymentNameLinux -location $location -TemplateFile $azTemplateFileLinux `
-                    -policyAssignmentName $azAzurePolicyNameLinux -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -policyAssignmentName $azAzurePolicyNameLinux -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             }
         }
         elseif ($policiesScope -eq "resourcegroup") {
             # Arc Windows
             New-AzResourceGroupDeployment -Name $arcDeploymentNameWindows -ResourceGroupName $resourceGroup `
                 -TemplateFile $arcTemplateFileWindows -location $location -policyAssignmentName $arcAzurePolicyNameWindows `
-                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             # Arc Linux
             New-AzResourceGroupDeployment -Name $arcDeploymentNameLinux -ResourceGroupName $resourceGroup `
                 -TemplateFile $arcTemplateFileLinux -location $location -policyAssignmentName $arcAzurePolicyNameLinux `
-                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
             # Azure VMs
             if ($deployForAzureVMs -eq $true) {
@@ -367,11 +367,11 @@ if ($deployVMInsightsPerfAndMap -eq $true -or $deployVMInsightsPerfOnly -eq $tru
                 # Azure Windows
                 New-AzResourceGroupDeployment -Name $azDeploymentNameWindows -ResourceGroupName $resourceGroup `
                     -TemplateFile $azTemplateFileWindows -location $location -policyAssignmentName $azAzurePolicyNameWindows `
-                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
                 # Azure Linux
                 New-AzResourceGroupDeployment -Name $azDeploymentNameLinux -ResourceGroupName $resourceGroup `
                     -TemplateFile $azTemplateFileLinux -location $location -policyAssignmentName $azAzurePolicyNameLinux `
-                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null      
+                    -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null      
             }
         }
     }
@@ -435,13 +435,13 @@ if ($deployChangeTrackingAndInventory -eq $true) {
         if ($policiesScope -eq "subscription") {
             # Azure Arc-enabled servers
             New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
-                -policyAssignmentName $azurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $azurePolicyName -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         }
         elseif ($policiesScope -eq "resourcegroup") {
             # Azure Arc-enabled servers
             New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
                 -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
-                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID | Out-Null
+                -dcrResourceId $DCR.Id -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         }
     }
 }
@@ -492,10 +492,10 @@ if ($deployUpdateManager -eq $true) {
     if ($policiesScope -eq "subscription") {
         # Azure Arc Windows
         New-AzDeployment -Name $arcDeploymentNameWindows -location $location -TemplateFile $arcTemplateFile `
-            -policyAssignmentName $arcPolicyNameWindows -osType "Windows" -resourceGroupID $resourceGroupID | Out-Null
+            -policyAssignmentName $arcPolicyNameWindows -osType "Windows" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         # Azure Arc Linux
         New-AzDeployment -Name $arcDeploymentNameLinux -location $location -TemplateFile $arcTemplateFile `
-            -policyAssignmentName $arcPolicyNameLinux -osType "Linux" -resourceGroupID $resourceGroupID | Out-Null
+            -policyAssignmentName $arcPolicyNameLinux -osType "Linux" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
         # Azure VMs
         if ($deployForAzureVMs -eq $true) {
@@ -503,21 +503,21 @@ if ($deployUpdateManager -eq $true) {
             Write-Host "Assigning Azure Policy: $azPolicyNameLinux"
             # Azure Windows
             New-AzDeployment -Name $azDeploymentNameWindows -location $location -TemplateFile $azTemplateFile `
-                -policyAssignmentName $azPolicyNameWindows -osType "Windows" -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $azPolicyNameWindows -osType "Windows" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             # Azure Linux
             New-AzDeployment -Name $azDeploymentNameLinux -location $location -TemplateFile $azTemplateFile `
-                -policyAssignmentName $azPolicyNameLinux -osType "Linux" -resourceGroupID $resourceGroupID | Out-Null
+                -policyAssignmentName $azPolicyNameLinux -osType "Linux" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         }        
     }
     elseif ($policiesScope -eq "resourcegroup") {
         # Azure Arc Windows
         New-AzResourceGroupDeployment -Name $arcDeploymentNameWindows -ResourceGroupName $resourceGroup `
             -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcPolicyNameWindows `
-            -osType "Windows" -resourceGroupID $resourceGroupID | Out-Null
+            -osType "Windows" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         # Azure Arc Linux
         New-AzResourceGroupDeployment -Name $arcDeploymentNameLinux -ResourceGroupName $resourceGroup `
             -TemplateFile $arcTemplateFile -location $location -policyAssignmentName $arcPolicyNameLinux `
-            -osType "Linux" -resourceGroupID $resourceGroupID | Out-Null
+            -osType "Linux" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
 
         # Azure VMs
         if ($deployForAzureVMs -eq $true) {
@@ -526,11 +526,11 @@ if ($deployUpdateManager -eq $true) {
             # Azure Windows
             New-AzResourceGroupDeployment -Name $azDeploymentNameWindows -ResourceGroupName $resourceGroup `
                 -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azPolicyNameWindows `
-                -osType "Windows" -resourceGroupID $resourceGroupID | Out-Null
+                -osType "Windows" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
             # Azure Linux
             New-AzResourceGroupDeployment -Name $azDeploymentNameLinux -ResourceGroupName $resourceGroup `
                 -TemplateFile $azTemplateFile -location $location -policyAssignmentName $azPolicyNameLinux `
-                -osType "Linux" -resourceGroupID $resourceGroupID | Out-Null
+                -osType "Linux" -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
         } 
     }
       
@@ -559,12 +559,12 @@ if ($deploySQLBPA -eq $true) {
     Write-Host "Assigning Azure Policy: $azurePolicyName"
     if ($policiesScope -eq "subscription") {
         New-AzDeployment -Name $deploymentName -location $location -TemplateFile $templateFile `
-            -policyAssignmentName $azurePolicyName -workspaceName $MonitorWSName -resourceGroupID $resourceGroupID | Out-Null
+            -policyAssignmentName $azurePolicyName -workspaceName $MonitorWSName -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
     }
     elseif ($policiesScope -eq "resourcegroup") {
         New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup `
             -TemplateFile $templateFile -location $location -policyAssignmentName $azurePolicyName `
-            -workspaceName $MonitorWSName -resourceGroupID $resourceGroupID | Out-Null
+            -workspaceName $MonitorWSName -resourceGroupID $resourceGroupID -prefixName $namingPrefix | Out-Null
     }
       
 }
@@ -697,12 +697,13 @@ if ($deployAutomationAccount -eq $true) {
     # Policy remedation will happen at subscription or resource group level, depending on the Scope parameter
     if ($managedIdentityScope -eq "subscription") {
         Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
-            -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup | Out-null
+            -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup `
+            -Parameters @{"prefixName" = $namingPrefix} | Out-null
     }
     elseif ($managedIdentityScope -eq "resourcegroup") {
         Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
             -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup `
-            -Parameters @{"resourceGroup" = $resourceGroup } | Out-null
+            -Parameters @{"resourceGroup" = $resourceGroup; "prefixName" = $namingPrefix} | Out-null
     }    
 
     # Get automation account managed identity and assign permissions to remediate policies at subscription/resource group level

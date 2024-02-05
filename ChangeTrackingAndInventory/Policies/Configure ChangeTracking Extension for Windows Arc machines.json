@@ -41,10 +41,16 @@
             "metadata": {
                 "description": "Specifies the location in which to create the managed identity."
             }
+        },
+        "prefixName": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
         }
     },
     "variables": {
-        "assignmentName": "[guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID'))]",
+        "assignmentName": "[concat(parameters('prefixName'), '_', guid(parameters('policyDefinitionID'), parameters('dcrResourceId'),parameters('resourceGroupID')))]",
         "AzureConnectedMachineOnboarding": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'cd570a14-e51a-42ad-bac8-bafd67325302')]"
     },
     "resources": [
@@ -64,8 +70,7 @@
                 "enforcementMode": "Default",
                 "metadata": {},
                 "nonComplianceMessages": [],
-                "parameters": {
-                }
+                "parameters": {}
             }
         },
         {
