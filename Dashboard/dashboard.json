@@ -18,6 +18,12 @@
             "metadata": {
                 "description": "Workspace name"
             }
+        },
+        "prefixName": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment prefix"
+            }
         }
     },
     "variables": {
@@ -65,7 +71,7 @@
                                         },
                                         {
                                             "name": "ConfigurationId",
-                                            "value": "[resourceId('Microsoft.Insights/workbooks/', guid('OS Performance and Capacity'))]",
+                                            "value": "[resourceId('Microsoft.Insights/workbooks/',guid(concat('OS Performance and Capacity',' - ', parameters('prefixName'))))]",
                                             "isOptional": true
                                         },
                                         {
@@ -186,7 +192,7 @@
                                         },
                                         {
                                             "name": "ConfigurationId",
-                                            "value": "[resourceId('Microsoft.Insights/workbooks/', guid('Azure Monitor Alerts'))]",
+                                            "value": "[resourceId('Microsoft.Insights/workbooks/', guid(concat('Azure Monitor Alerts',' - ', parameters('prefixName'))))]",
                                             "isOptional": true
                                         },
                                         {
@@ -339,7 +345,7 @@
                                         },
                                         {
                                             "name": "ConfigurationId",
-                                            "value": "[resourceId('Microsoft.Insights/workbooks/', guid('Windows Event Logs'))]",
+                                            "value": "[resourceId('Microsoft.Insights/workbooks/', guid(concat('Windows Event Logs',' - ', parameters('prefixName'))))]",
                                             "isOptional": true
                                         },
                                         {

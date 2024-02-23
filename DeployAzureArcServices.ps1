@@ -654,7 +654,7 @@ if ($deployDashboard -eq $true) {
     # Deploy the Azure Dashboard
     Write-Host "Deploying the Azure Dashboard"
     New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-        -workspaceName $MonitorWSName -location $location -dashboardName $dashboardName | Out-Null    
+        -workspaceName $MonitorWSName -location $location -dashboardName $dashboardName -prefixName $namingPrefix | Out-Null    
 }
 else {
     Write-Host "Skipped"
