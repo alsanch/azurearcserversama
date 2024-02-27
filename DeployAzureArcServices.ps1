@@ -676,7 +676,7 @@ if ($deployAutomationAccount -eq $true) {
 
     # Create and publish the runbook
     $runbookName = "AutoRemediateFrameworkPolicies"
-    $runbookType = "PowerShell"
+    $runbookType = "Powershell72"
     $runbookCodePath = ".\AutomationAccount\Runbook\AutoRemediateFrameworkPolicies.ps1"
     Write-Host "Importing the required runbooks"
     Import-AzAutomationRunbook -AutomationAccountName $automationAccountName -ResourceGroupName $resourceGroup  -Name $runbookName `
