@@ -676,7 +676,7 @@ if ($deployAutomationAccount -eq $true) {
 
     # Create and publish the runbook
     $runbookName = "AutoRemediateFrameworkPolicies"
-    $runbookType = "Powershell72"
+    $runbookType = "PowerShell72"
     $runbookCodePath = ".\AutomationAccount\Runbook\AutoRemediateFrameworkPolicies.ps1"
     Write-Host "Importing the required runbooks"
     Import-AzAutomationRunbook -AutomationAccountName $automationAccountName -ResourceGroupName $resourceGroup  -Name $runbookName `
@@ -714,6 +714,7 @@ if ($deployAutomationAccount -eq $true) {
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5   
     }
+    Write-Host "."
     $principalId = (Get-AzAutomationAccount -ResourceGroupName $resourceGroup -Name $automationAccountName).Identity.PrincipalId
     if ($managedIdentityScope -eq "subscription") {
         Write-Host "Assigning Resource Policy Contributor role at subscription level"
