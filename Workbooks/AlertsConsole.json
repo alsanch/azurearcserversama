@@ -154,7 +154,7 @@
                                 "type": 4,
                                 "isRequired": true,
                                 "value": {
-                                    "durationMs": 2592000000
+                                    "durationMs": 172800000
                                 },
                                 "typeSettings": {
                                     "selectableValues": [
@@ -215,6 +215,7 @@
                                     "{Subscription}"
                                 ],
                                 "value": [
+                                    "New",
                                     "value::all"
                                 ],
                                 "typeSettings": {
@@ -237,7 +238,7 @@
                     "type": 3,
                     "content": {
                         "version": "KqlItem/1.0",
-                        "query": "AlertsManagementResources \r\n| where type =~ 'microsoft.alertsmanagement/alerts'\r\n| where properties.essentials.startDateTime {timeRange}  \r\n| where properties.essentials.actionStatus.isSuppressed == false\r\n| extend Severity=tostring(properties.essentials.severity)\r\n| extend State=tostring(properties.essentials.alertState)\r\n| extend comp = properties.context.context.condition.allOf[0].dimensions\r\n| mvexpand comp\r\n| where comp.name == 'Computer'\r\n| where \"*\" in ({State}) or State in ({State})\r\n| where \"*\" in ({ResourceTypes}) or properties.essentials.targetResourceType in~ ({ResourceTypes})\r\n| where \"*\" in ({ResourceGroups}) or properties.essentials.targetResourceGroup in~ ({ResourceGroups})\r\n| where \"*\" in ({Resources}) or properties.essentials.targetResource in~ ({Resources})\r\n| project AlertId=id, StartTime=todatetime(tostring(properties.essentials.startDateTime)), Name=name, Severity, State=tostring(properties.essentials.alertState), MonitorCondition=tostring(properties.essentials.monitorCondition), SignalType=tostring(properties.essentials.signalType), TargetResource = split(comp.value, '.')[0]\r\n| order by StartTime desc\r\n",
+                        "query": "AlertsManagementResources \r\n| where type =~ 'microsoft.alertsmanagement/alerts'\r\n| where properties.essentials.startDateTime {timeRange}  \r\n| where properties.essentials.actionStatus.isSuppressed == false\r\n| extend Severity=tostring(properties.essentials.severity)\r\n| extend State=tostring(properties.essentials.alertState)\r\n| extend TargetResource = tostring(properties.context.context.resourceId)\r\n| where \"*\" in ({State}) or State in ({State})\r\n| where \"*\" in ({ResourceTypes}) or properties.essentials.targetResourceType in~ ({ResourceTypes})\r\n| where \"*\" in ({ResourceGroups}) or properties.essentials.targetResourceGroup in~ ({ResourceGroups})\r\n| where \"*\" in ({Resources}) or properties.essentials.targetResource in~ ({Resources})\r\n| project AlertId=id, StartTime=todatetime(tostring(properties.essentials.startDateTime)), Name=name, Severity, State=tostring(properties.essentials.alertState), MonitorCondition=tostring(properties.essentials.monitorCondition), SignalType=tostring(properties.essentials.signalType), TargetResource\r\n| order by StartTime desc\r\n",
                         "size": 0,
                         "title": "Azure Monitor alerts",
                         "queryType": 1,
@@ -326,7 +327,7 @@
                                     "columnMatch": "TargetResource",
                                     "formatter": 13,
                                     "formatOptions": {
-                                        "linkTarget": null,
+                                        "linkTarget": "Resource",
                                         "showIcon": true
                                     }
                                 },
