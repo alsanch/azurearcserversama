@@ -91,73 +91,43 @@
                                         },
                                         {
                                             "name": "StepSettings",
-                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"let trend = ( Heartbeat\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | make-series InternalTrend=iff(count() > 0, 1, 0) default = 0 on TimeGenerated from {TimeRange:start} to {TimeRange:end} step 15m by Computer\\r\\n    | extend Trend=array_slice(InternalTrend, array_length(InternalTrend) - 30, array_length(InternalTrend)-1)); \\r\\n\\r\\nlet PerfCPU = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where Namespace == \\\"Processor\\\" and Name == \\\"UtilizationPercentage\\\"\\r\\n    | summarize AvgCPU=round(avg(Val),2), MaxCPU=round(max(Val),2) by Computer\\r\\n    | extend StatusCPU = case (\\r\\n                  AvgCPU > 80, 2,\\r\\n                  AvgCPU > 50, 1,\\r\\n                  AvgCPU <= 50, 0, -1\\r\\n                )\\r\\n    );\\r\\n\\r\\nlet PerfMemory = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where Namespace == \\\"Memory\\\" and Name == \\\"AvailableMB\\\"\\r\\n    | summarize AvgMEM=round(avg(Val),2), MaxMEM=round(max(Val),2) by Computer\\r\\n    | extend StatusMEM = case (\\r\\n                  AvgMEM > 4, 0,\\r\\n                  AvgMEM >= 1, 1,\\r\\n                  AvgMEM < 1, 2, -1\\r\\n            )\\r\\n    );\\r\\n\\r\\nlet PerfDisk = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where Namespace == \\\"LogicalDisk\\\" and Name == \\\"FreeSpaceMB\\\"\\r\\n    | extend Disk=tostring(todynamic(Tags)[\\\"vm.azm.ms/mountId\\\"])\\r\\n    | where (Disk =~ \\\"C:\\\" or Disk == \\\"/\\\")\\r\\n    | summarize AvgDisk=round(avg(Val),2), (TimeGenerated,LastDisk)=arg_max(TimeGenerated,round(Val,2)) by Computer\\r\\n    | extend StatusDisk = case (\\r\\n                  AvgDisk < 5000, 2,\\r\\n                  AvgDisk < 30000, 1,\\r\\n                  AvgDisk >= 30000, 0,-1\\r\\n)\\r\\n    | project Computer, AvgDisk , LastDisk ,StatusDisk\\r\\n    );\\r\\nPerfCPU\\r\\n| join (PerfMemory) on Computer\\r\\n| join (PerfDisk) on Computer\\r\\n| join (trend) on Computer\\r\\n| project Computer,StatusCPU, AvgCPU,MaxCPU,StatusMEM,AvgMEM,MaxMEM,StatusDisk,AvgDisk,LastDisk, [\\\"Heartbeat Trend\\\"] = Trend\\r\\n| sort by Computer \",\"size\":0,\"showAnalytics\":true,\"title\":\"Top servers (data aggregated based on TimeRange)\",\"timeContextFromParameter\":\"TimeRange\",\"exportFieldName\":\"Computer\",\"exportParameterName\":\"Computer\",\"exportDefaultValue\":\"All\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\",\"crossComponentResources\":[\"{Workspace}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"StatusCPU\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"4\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"Unknown\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgCPU\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":1,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"MaxCPU\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":1,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"StatusMEM\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"critical\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"unknown\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgMEM\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"MaxMEM\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"StatusDisk\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"4\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"success\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgDisk\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"LastDisk\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":4,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"Trend\",\"formatter\":10,\"formatOptions\":{\"palette\":\"blue\"}},{\"columnMatch\":\"Max\",\"formatter\":0,\"formatOptions\":{},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Average\",\"formatter\":8,\"formatOptions\":{\"palette\":\"yellowOrangeRed\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\",\"useGrouping\":false}}},{\"columnMatch\":\"Min\",\"formatter\":8,\"formatOptions\":{\"palette\":\"yellowOrangeRed\",\"aggregation\":\"Min\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}}]},\"sortBy\":[]}",
+                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"let trend = (Heartbeat\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where RGName in ({ResourceGroup})\\r\\n    | make-series InternalTrend=iff(count() > 0, 1, 0) default = 0 on TimeGenerated from ago(3d) to now() step 15m by _ResourceId\\r\\n    | extend Trend=array_slice(InternalTrend, array_length(InternalTrend) - 30, array_length(InternalTrend) - 1)); \\r\\nlet PerfCPU = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where RGName in ({ResourceGroup})\\r\\n    | where Namespace == \\\"Processor\\\" and Name == \\\"UtilizationPercentage\\\"\\r\\n    | summarize AvgCPU=round(avg(Val), 2), MaxCPU=round(max(Val), 2) by _ResourceId\\r\\n    | extend StatusCPU = case (\\r\\n                             AvgCPU > 80,\\r\\n                             2,\\r\\n                             AvgCPU > 50,\\r\\n                             1,\\r\\n                             AvgCPU <= 50,\\r\\n                             0,\\r\\n                             -1\\r\\n                         )\\r\\n    );\\r\\nlet PerfMemory = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where RGName in ({ResourceGroup})\\r\\n    | where Namespace == \\\"Memory\\\" and Name == \\\"AvailableMB\\\"\\r\\n    | summarize AvgMEM=round(avg(Val), 2), MaxMEM=round(max(Val), 2) by _ResourceId\\r\\n    | extend StatusMEM = case (\\r\\n                             AvgMEM > 4,\\r\\n                             0,\\r\\n                             AvgMEM >= 1,\\r\\n                             1,\\r\\n                             AvgMEM < 1,\\r\\n                             2,\\r\\n                             -1\\r\\n                         )\\r\\n    );\\r\\nlet PerfDisk = (InsightsMetrics\\r\\n    | where Origin == \\\"vm.azm.ms\\\"\\r\\n    | extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n    | where RGName in ({ResourceGroup})\\r\\n    | where Namespace == \\\"LogicalDisk\\\" and Name == \\\"FreeSpaceMB\\\"\\r\\n    | extend Disk=tostring(todynamic(Tags)[\\\"vm.azm.ms/mountId\\\"])\\r\\n    | where (Disk =~ \\\"C:\\\" or Disk == \\\"/\\\")\\r\\n    | summarize\\r\\n        AvgDisk=round(avg(Val), 2),\\r\\n        (TimeGenerated, LastDisk)=arg_max(TimeGenerated, round(Val, 2))\\r\\n        by _ResourceId\\r\\n    | extend StatusDisk = case (\\r\\n                              AvgDisk < 5000,\\r\\n                              2,\\r\\n                              AvgDisk < 30000,\\r\\n                              1,\\r\\n                              AvgDisk >= 30000,\\r\\n                              0,\\r\\n                              -1\\r\\n                          )\\r\\n    | project _ResourceId, AvgDisk, LastDisk, StatusDisk\\r\\n    );\\r\\nPerfCPU\\r\\n| join (PerfMemory) on _ResourceId\\r\\n| join (PerfDisk) on _ResourceId\\r\\n| join (trend) on _ResourceId\\r\\n| project\\r\\n    _ResourceId,\\r\\n    StatusCPU,\\r\\n    AvgCPU,\\r\\n    MaxCPU,\\r\\n    StatusMEM,\\r\\n    AvgMEM,\\r\\n    MaxMEM,\\r\\n    StatusDisk,\\r\\n    AvgDisk,\\r\\n    LastDisk,\\r\\n    [\\\"Heartbeat Trend\\\"] = Trend\\r\\n| sort by StatusCPU,StatusDisk desc\",\"size\":0,\"showAnalytics\":true,\"title\":\"Top servers (data aggregated based on TimeRange)\",\"timeContextFromParameter\":\"TimeRange\",\"exportFieldName\":\"_ResourceId\",\"exportParameterName\":\"_ResourceId\",\"exportDefaultValue\":\"All\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\",\"crossComponentResources\":[\"{Workspace}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"StatusCPU\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"4\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"Unknown\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgCPU\",\"formatter\":0,\"numberFormat\":{\"unit\":1,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"MaxCPU\",\"formatter\":0,\"numberFormat\":{\"unit\":1,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"StatusMEM\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"critical\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"unknown\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgMEM\",\"formatter\":0,\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"MaxMEM\",\"formatter\":0,\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"StatusDisk\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"0\",\"representation\":\"success\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"1\",\"representation\":\"2\",\"text\":\"{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"2\",\"representation\":\"4\",\"text\":\"{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"success\",\"text\":\"{1}\"}]}},{\"columnMatch\":\"AvgDisk\",\"formatter\":0,\"numberFormat\":{\"unit\":38,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"LastDisk\",\"formatter\":0,\"numberFormat\":{\"unit\":4,\"options\":{\"style\":\"decimal\",\"maximumFractionDigits\":2}}},{\"columnMatch\":\"Trend\",\"formatter\":10,\"formatOptions\":{\"palette\":\"blue\"}},{\"columnMatch\":\"Max\",\"formatter\":0,\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Average\",\"formatter\":8,\"formatOptions\":{\"palette\":\"yellowOrangeRed\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\",\"useGrouping\":false}}},{\"columnMatch\":\"Min\",\"formatter\":8,\"formatOptions\":{\"palette\":\"yellowOrangeRed\",\"aggregation\":\"Min\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}}],\"filter\":true,\"labelSettings\":[{\"columnId\":\"_ResourceId\",\"label\":\"Computer\"}]},\"sortBy\":[]}",
                                             "isOptional": true
                                         },
                                         {
                                             "name": "ParameterValues",
                                             "value": {
-                                                "TimeRange": {
-                                                    "type": 4,
-                                                    "value": {
-                                                        "durationMs": 86400000
-                                                    },
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "Last 24 hours",
-                                                    "displayName": "TimeRange",
-                                                    "formattedValue": "Last 24 hours"
-                                                },
-                                                "Subscription": {
-                                                    "type": 6,
-                                                    "value": [
-                                                        "[subscription().id]"
-                                                    ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "[subscription().displayName]",
-                                                    "displayName": "Subscription",
-                                                    "formattedValue": "[concat(variables('singlequote'), subscription().id, variables('singlequote'))]"
-                                                },
                                                 "Workspace": {
                                                     "type": 5,
                                                     "value": [
                                                         "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
                                                     "labelValue": "[parameters('workspaceName')]",
-                                                    "displayName": "Workspace",
                                                     "formattedValue": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
                                                 },
                                                 "ResourceGroup": {
                                                     "type": 2,
-                                                    "value": [
-                                                        "[resourceGroup().name]"
-                                                    ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
+                                                    "value": [],
                                                     "labelValue": "All",
-                                                    "displayName": "ResourceGroup",
                                                     "specialValue": [
                                                         "value::all"
                                                     ],
-                                                    "formattedValue": "[concat(variables('singlequote'), resourceGroup().name, variables('singlequote'))]"
+                                                    "formattedValue": null
+                                                },
+                                                "TimeRange": {
+                                                    "type": 4,
+                                                    "value": {
+                                                        "durationMs": 86400000
+                                                    },
+                                                    "labelValue": "Last 24 hours",
+                                                    "formattedValue": "Last 24 hours"
                                                 }
                                             },
                                             "isOptional": true
                                         },
                                         {
                                             "name": "Location",
-                                            "value": "westeurope",
+                                            "value": "[parameters('location')]",
                                             "isOptional": true
                                         }
                                     ],
@@ -175,7 +145,7 @@
                                     "inputs": [
                                         {
                                             "name": "ComponentId",
-                                            "value": "Azure Monitor",
+                                            "value": "azure monitor",
                                             "isOptional": true
                                         },
                                         {
@@ -186,7 +156,7 @@
                                         {
                                             "name": "ResourceIds",
                                             "value": [
-                                                "Azure Monitor"
+                                                "azure monitor"
                                             ],
                                             "isOptional": true
                                         },
@@ -202,7 +172,7 @@
                                         },
                                         {
                                             "name": "GalleryResourceType",
-                                            "value": "Azure Monitor",
+                                            "value": "azure monitor",
                                             "isOptional": true
                                         },
                                         {
@@ -212,7 +182,7 @@
                                         },
                                         {
                                             "name": "StepSettings",
-                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"AlertsManagementResources \\r\\n| where type =~ 'microsoft.alertsmanagement/alerts'\\r\\n| where properties.essentials.startDateTime {timeRange}  \\r\\n| where properties.essentials.actionStatus.isSuppressed == false\\r\\n| extend Severity=tostring(properties.essentials.severity)\\r\\n| extend State=tostring(properties.essentials.alertState)\\r\\n| extend comp = properties.context.context.condition.allOf[0].dimensions\\r\\n| mvexpand comp\\r\\n| where comp.name == 'Computer' or comp.name == 'TestConfigurationName' or isnull(comp)\\r\\n| where \\\"*\\\" in ({State}) or State in ({State})\\r\\n| where \\\"*\\\" in ({ResourceTypes}) or properties.essentials.targetResourceType in~ ({ResourceTypes})\\r\\n| where \\\"*\\\" in ({ResourceGroups}) or properties.essentials.targetResourceGroup in~ ({ResourceGroups})\\r\\n| where \\\"*\\\" in ({Resources}) or properties.essentials.targetResource in~ ({Resources})\\r\\n| project AlertId=id, StartTime=todatetime(tostring(properties.essentials.startDateTime)), Name=name, Severity, State=tostring(properties.essentials.alertState), MonitorCondition=tostring(properties.essentials.monitorCondition), SignalType=tostring(properties.essentials.signalType), TargetResource = split(comp.value, '.')[0]\\r\\n| order by StartTime desc\\r\\n\",\"size\":0,\"title\":\"Azure Monitor alerts\",\"queryType\":1,\"resourceType\":\"microsoft.resourcegraph/resources\",\"crossComponentResources\":[\"{Subscription}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"AlertId\",\"formatter\":5},{\"columnMatch\":\"StartTime\",\"formatter\":6},{\"columnMatch\":\"Name\",\"formatter\":1,\"formatOptions\":{\"linkTarget\":\"OpenBlade\",\"linkIsContextBlade\":true,\"bladeOpenContext\":{\"bladeName\":\"AlertDetailsTemplateBlade\",\"extensionName\":\"Microsoft_Azure_Monitoring\",\"bladeParameters\":[{\"name\":\"alertId\",\"source\":\"column\",\"value\":\"AlertId\"},{\"name\":\"alertName\",\"source\":\"column\",\"value\":\"Name\"},{\"name\":\"invokedFrom\",\"source\":\"static\",\"value\":\"Workbooks\"}]}},\"tooltipFormat\":{\"tooltip\":\"View alert details\"}},{\"columnMatch\":\"Severity\",\"formatter\":11},{\"columnMatch\":\"State\",\"formatter\":1},{\"columnMatch\":\"MonitorCondition\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"Fired\",\"representation\":\"Fired\",\"text\":\"{0}{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"Resolved\",\"representation\":\"Resolved\",\"text\":\"{0}{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"success\",\"text\":\"{0}{1}\"}]}},{\"columnMatch\":\"TargetResource\",\"formatter\":13,\"formatOptions\":{\"linkTarget\":null,\"showIcon\":true}},{\"columnMatch\":\"ResourceType\",\"formatter\":16,\"formatOptions\":{\"showIcon\":true}},{\"columnMatch\":\"Resource Type\",\"formatter\":11},{\"columnMatch\":\"essentials\",\"formatter\":5}]}}",
+                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"AlertsManagementResources \\r\\n| where type =~ 'microsoft.alertsmanagement/alerts'\\r\\n| where properties.essentials.startDateTime {timeRange}  \\r\\n| where properties.essentials.actionStatus.isSuppressed == false\\r\\n| extend Severity=tostring(properties.essentials.severity)\\r\\n| extend State=tostring(properties.essentials.alertState)\\r\\n| extend TargetResource = tostring(properties.context.context.resourceId)\\r\\n| where \\\"*\\\" in ({State}) or State in ({State})\\r\\n| where \\\"*\\\" in ({ResourceTypes}) or properties.essentials.targetResourceType in~ ({ResourceTypes})\\r\\n| where \\\"*\\\" in ({ResourceGroups}) or properties.essentials.targetResourceGroup in~ ({ResourceGroups})\\r\\n| where \\\"*\\\" in ({Resources}) or properties.essentials.targetResource in~ ({Resources})\\r\\n| project AlertId=id, StartTime=todatetime(tostring(properties.essentials.startDateTime)), Name=name, Severity, State=tostring(properties.essentials.alertState), MonitorCondition=tostring(properties.essentials.monitorCondition), SignalType=tostring(properties.essentials.signalType), TargetResource\\r\\n| order by StartTime desc\\r\\n\",\"size\":0,\"title\":\"Azure Monitor alerts\",\"queryType\":1,\"resourceType\":\"microsoft.resourcegraph/resources\",\"crossComponentResources\":[\"{Subscription}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"AlertId\",\"formatter\":5},{\"columnMatch\":\"StartTime\",\"formatter\":6},{\"columnMatch\":\"Name\",\"formatter\":1,\"formatOptions\":{\"linkTarget\":\"OpenBlade\",\"linkIsContextBlade\":true,\"bladeOpenContext\":{\"bladeName\":\"AlertDetailsTemplateBlade\",\"extensionName\":\"Microsoft_Azure_Monitoring\",\"bladeParameters\":[{\"name\":\"alertId\",\"source\":\"column\",\"value\":\"AlertId\"},{\"name\":\"alertName\",\"source\":\"column\",\"value\":\"Name\"},{\"name\":\"invokedFrom\",\"source\":\"static\",\"value\":\"Workbooks\"}]}},\"tooltipFormat\":{\"tooltip\":\"View alert details\"}},{\"columnMatch\":\"Severity\",\"formatter\":11},{\"columnMatch\":\"State\",\"formatter\":1},{\"columnMatch\":\"MonitorCondition\",\"formatter\":18,\"formatOptions\":{\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"==\",\"thresholdValue\":\"Fired\",\"representation\":\"Fired\",\"text\":\"{0}{1}\"},{\"operator\":\"==\",\"thresholdValue\":\"Resolved\",\"representation\":\"Resolved\",\"text\":\"{0}{1}\"},{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"success\",\"text\":\"{0}{1}\"}]}},{\"columnMatch\":\"TargetResource\",\"formatter\":13,\"formatOptions\":{\"linkTarget\":\"Resource\",\"showIcon\":true}},{\"columnMatch\":\"ResourceType\",\"formatter\":16,\"formatOptions\":{\"showIcon\":true}},{\"columnMatch\":\"Resource Type\",\"formatter\":11},{\"columnMatch\":\"essentials\",\"formatter\":5}]}}",
                                             "isOptional": true
                                         },
                                         {
@@ -223,38 +193,46 @@
                                                     "value": [
                                                         "[subscription().id]"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
                                                     "labelValue": "[subscription().displayName]",
-                                                    "displayName": "Subscriptions",
                                                     "formattedValue": "[concat(variables('singlequote'), subscription().id, variables('singlequote'))]"
                                                 },
-                                                "ResourceGroups": {
+                                                "timeRange": {
+                                                    "type": 4,
+                                                    "value": {
+                                                        "durationMs": 172800000
+                                                    },
+                                                    "labelValue": "Last 48 hours",
+                                                    "formattedValue": "Last 48 hours"
+                                                },
+                                                "State": {
                                                     "type": 2,
                                                     "value": [
-                                                        "[resourceGroup().name]"
+                                                        "*"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "[resourceGroup().name]",
-                                                    "displayName": "Resource groups",
-                                                    "formattedValue": "[concat(variables('singlequote'), resourceGroup().name, variables('singlequote'))]"
+                                                    "labelValue": "New, All",
+                                                    "specialValue": [
+                                                        "New",
+                                                        "value::all"
+                                                    ],
+                                                    "formattedValue": "'*'"
                                                 },
                                                 "ResourceTypes": {
                                                     "type": 7,
                                                     "value": [
                                                         "*"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
                                                     "labelValue": "All",
-                                                    "displayName": "Resource types",
+                                                    "specialValue": [
+                                                        "value::all"
+                                                    ],
+                                                    "formattedValue": "'*'"
+                                                },
+                                                "ResourceGroups": {
+                                                    "type": 2,
+                                                    "value": [
+                                                        "*"
+                                                    ],
+                                                    "labelValue": "All",
                                                     "specialValue": [
                                                         "value::all"
                                                     ],
@@ -265,41 +243,7 @@
                                                     "value": [
                                                         "*"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
                                                     "labelValue": "All",
-                                                    "displayName": "Resources",
-                                                    "specialValue": [
-                                                        "value::all"
-                                                    ],
-                                                    "formattedValue": "'*'"
-                                                },
-                                                "timeRange": {
-                                                    "type": 4,
-                                                    "value": {
-                                                        "durationMs": 2592000000
-                                                    },
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "Last 30 days",
-                                                    "displayName": "Time Range",
-                                                    "formattedValue": "Last 30 days"
-                                                },
-                                                "State": {
-                                                    "type": 2,
-                                                    "value": [
-                                                        "*"
-                                                    ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "All",
-                                                    "displayName": "State",
                                                     "specialValue": [
                                                         "value::all"
                                                     ],
@@ -310,7 +254,7 @@
                                         },
                                         {
                                             "name": "Location",
-                                            "value": "westeurope",
+                                            "value": "[parameters('location')]",
                                             "isOptional": true
                                         }
                                     ],
@@ -365,73 +309,54 @@
                                         },
                                         {
                                             "name": "StepSettings",
-                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"Event\\r\\n| extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n|  where EventLog in (\\\"System\\\",\\\"Application\\\",\\\"Operations Manager\\\")\\r\\n| project EventLog,EventLevelName\\r\\n| evaluate pivot(EventLevelName)\",\"size\":1,\"showAnalytics\":true,\"title\":\"Windows Events - Summary\",\"timeContextFromParameter\":\"TimeRange\",\"exportFieldName\":\"EventLog\",\"exportParameterName\":\"EventLog\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\",\"crossComponentResources\":[\"{Workspace}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"Information\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"info\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Warning\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"warning\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Error\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"3\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}}]}}",
+                                            "value": "{\"version\":\"KqlItem/1.0\",\"query\":\"Event\\r\\n| extend RGName = tolower(split(_ResourceId, \\\"/\\\")[4])\\r\\n| where RGName in ({ResourceGroup})\\r\\n| where '{EventLog:label}'=='All' or EventLog in ({EventLog})\\r\\n| project EventLog,EventLevelName\\r\\n| evaluate pivot(EventLevelName)\\r\\n\",\"size\":1,\"showAnalytics\":true,\"title\":\"Windows Events - Summary\",\"timeContextFromParameter\":\"TimeRange\",\"exportFieldName\":\"EventLog\",\"exportParameterName\":\"EventLogP\",\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\",\"crossComponentResources\":[\"{Workspace}\"],\"gridSettings\":{\"formatters\":[{\"columnMatch\":\"Information\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"info\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Warning\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"warning\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}},{\"columnMatch\":\"Error\",\"formatter\":18,\"formatOptions\":{\"showIcon\":true,\"thresholdsOptions\":\"icons\",\"thresholdsGrid\":[{\"operator\":\"Default\",\"thresholdValue\":null,\"representation\":\"3\",\"text\":\"{0}{1}\"}],\"aggregation\":\"Unique\"},\"numberFormat\":{\"unit\":0,\"options\":{\"style\":\"decimal\"}}}]}}",
                                             "isOptional": true
                                         },
                                         {
                                             "name": "ParameterValues",
                                             "value": {
-                                                "TimeRange": {
-                                                    "type": 4,
-                                                    "value": {
-                                                        "durationMs": 86400000
-                                                    },
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "Last 24 hours",
-                                                    "displayName": "TimeRange",
-                                                    "formattedValue": "Last 24 hours"
-                                                },
-                                                "Subscription": {
-                                                    "type": 6,
-                                                    "value": [
-                                                        "[subscription().id]"
-                                                    ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
-                                                    "labelValue": "[subscription().displayName]",
-                                                    "displayName": "Subscription",
-                                                    "formattedValue": "[concat(variables('singlequote'), subscription().id, variables('singlequote'))]"
-                                                },
                                                 "Workspace": {
                                                     "type": 5,
                                                     "value": [
                                                         "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
                                                     ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
                                                     "labelValue": "[parameters('workspaceName')]",
-                                                    "displayName": "Workspace",
                                                     "formattedValue": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
                                                 },
                                                 "ResourceGroup": {
                                                     "type": 2,
-                                                    "value": [
-                                                        "[resourceGroup().name]"
-                                                    ],
-                                                    "isPending": false,
-                                                    "isWaiting": false,
-                                                    "isFailed": false,
-                                                    "isGlobal": false,
+                                                    "value": [],
                                                     "labelValue": "All",
-                                                    "displayName": "ResourceGroup",
                                                     "specialValue": [
                                                         "value::all"
                                                     ],
-                                                    "formattedValue": "[concat(variables('singlequote'), resourceGroup().name, variables('singlequote'))]"
+                                                    "formattedValue": null
+                                                },
+                                                "EventLog": {
+                                                    "type": 5,
+                                                    "value": [
+                                                        "All"
+                                                    ],
+                                                    "labelValue": "All",
+                                                    "specialValue": [
+                                                        "value::all"
+                                                    ],
+                                                    "formattedValue": "'All'"
+                                                },
+                                                "TimeRange": {
+                                                    "type": 4,
+                                                    "value": {
+                                                        "durationMs": 86400000
+                                                    },
+                                                    "labelValue": "Last 24 hours",
+                                                    "formattedValue": "Last 24 hours"
                                                 }
                                             },
                                             "isOptional": true
                                         },
                                         {
                                             "name": "Location",
-                                            "value": "westeurope",
+                                            "value": "[parameters('location')]",
                                             "isOptional": true
                                         }
                                     ],
@@ -468,9 +393,9 @@
                                         "value": "Past 24 hours"
                                     },
                                     "filteredPartIds": [
-                                        "StartboardPart-PinnedNotebookQueryPart-c328d75d-96af-44e7-b82d-052ef37c4e52",
-                                        "StartboardPart-PinnedNotebookQueryPart-c328d75d-96af-44e7-b82d-052ef37c4e54",
-                                        "StartboardPart-PinnedNotebookQueryPart-c328d75d-96af-44e7-b82d-052ef37c4e58"
+                                        "StartboardPart-PinnedNotebookQueryPart-6d4b7208-abf3-4e31-ae0d-6dca43026eee",
+                                        "StartboardPart-PinnedNotebookQueryPart-6d4b7208-abf3-4e31-ae0d-6dca43026ef0",
+                                        "StartboardPart-PinnedNotebookQueryPart-6d4b7208-abf3-4e31-ae0d-6dca43026ef2"
                                     ]
                                 }
                             }
