@@ -47,7 +47,9 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
     - **ResourceGroup:** name of an existing or new resource group where the framework is deployed
     - **NamingPrefix:** three letters lowercase prefix used in the name of the deployed resources
     - **Location:** Azure Region where the framework is deployed
-    - **Email:** email account used in the Action Group for alerts and in the Microsoft Defender for Cloud notification settings
+    - **Email:** email account used in the Action Group for the Azure Monitor alerts
+    - **OptionalEmail:** optional email account used in the Action Group for the Azure Monitor alerts. Leave it as "" if this paramater is not needed.
+    - **OptionalWebhook:** optional webhook URI used in the Action Group for the Azure Monitor alerts. Leave it as "" if this paramater is not needed.
     - **Scope:** scope at which the Azure Policies and the Automation Account managed identity permissions are assigned. Allowed values: "subscription", "resourcegroup"
 2. Open PowerShell and **change your working directory** to the project directory
 3. Run **Login-AzAccount**
