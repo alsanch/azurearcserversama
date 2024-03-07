@@ -20,6 +20,20 @@
             "metadata": {
                 "description": "Email address."
             }
+        },
+        "optionalEmailAddress": {
+            "type": "string",
+            "defaultValue": "azmonoptional@testingazmon.com",
+            "metadata": {
+                "description": "Optional email address."
+            }
+        },
+        "webhookURL": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Webhook URL."
+            }
         }
     },
     "resources": [
@@ -36,6 +50,22 @@
                         "name": "monitoringEmail",
                         "emailAddress": "[parameters('emailAddress')]",
                         "useCommonAlertSchema": true
+                    },
+                    {
+                        "name": "monitoringOptionalEmail",
+                        "emailAddress": "[parameters('optionalEmailAddress')]",
+                        "useCommonAlertSchema": true
+                    }
+                ],
+                "webhookReceivers": [
+                    {
+                        "name": "Webhook",
+                        "serviceUri": "[parameters('webhookURL')]",
+                        "useCommonAlertSchema": true,
+                        "useAadAuth": false,
+                        "objectId": null,
+                        "identifierUri": null,
+                        "tenantId": null
                     }
                 ]
             }

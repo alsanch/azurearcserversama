@@ -20,6 +20,13 @@
             "metadata": {
                 "description": "Email address."
             }
+        },
+        "optionalEmailAddress": {
+            "type": "string",
+            "defaultValue": "azmon@testingazmon.com",
+            "metadata": {
+                "description": "Optional email address."
+            }
         }
     },
     "resources": [
@@ -35,6 +42,11 @@
                     {
                         "name": "monitoringEmail",
                         "emailAddress": "[parameters('emailAddress')]",
+                        "useCommonAlertSchema": true
+                    },
+                    {
+                        "name": "monitoringOptionalEmail",
+                        "emailAddress": "[parameters('optionalEmailAddress')]",
                         "useCommonAlertSchema": true
                     }
                 ]

@@ -25,6 +25,8 @@ $namingPrefix = $parametersFileInput.NamingPrefix
 $location = $parametersFileInput.Location
 $policiesScope = $parametersFileInput.Scope
 $emailAddress = $parametersFileInput.Email
+$optionalEmailAddress = $parametersFileInput.OptionalEmail
+$optionalWebhook = $parametersFileInput.OptionalWebhook
 $MonitorWSName = $namingPrefix + "-la-monitor"
 $ActionGroupName = $namingPrefix + "-ag"
 $ActionGroupShortName = $namingPrefix + "-ag"
@@ -577,13 +579,42 @@ else {
 Write-Host ""
 Write-Host -ForegroundColor Cyan "Deploying Azure Monitor Action Group"
 if ($deployActionGroup -eq $true) {
-    $deploymentName = "deploy_action_group"
-    $templateFile = ".\ActionGroup\actionGroup.json"
-        
-    # Deploy the data sources
-    Write-Host "Deploying Azure Monitor Action Group"
-    New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
-        -actionGroupName $actionGroupName -actionGroupShortName $actionGroupShortName -emailAddress $emailAddress | Out-Null
+
+    # Deploy email address and optional email address and webhook
+    if ($optionalEmailAddress -ne "" -and $optionalWebhook -ne "") {
+        "Deploying Azure Monitor Action Group with email address, optional email address and webhook"
+        $deploymentName = "deploy_action_group_optionalEmailWebhook"
+        $templateFile = ".\ActionGroup\actionGroupOptionalEmailWebhook.json"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -actionGroupName $actionGroupName -actionGroupShortName $actionGroupShortName -emailAddress $emailAddress `
+            -optionalEmailAddress $optionalEmailAddress -webhookURL $optionalWebhook | Out-Null
+    }
+    # Deploy email address and optional email address
+    elseif ($optionalEmailAddress -ne "" -and $optionalWebhook -eq "") {
+        "Deploying Azure Monitor Action Group with email address and optional email address"
+        $deploymentName = "deploy_action_group_optionalEmail"
+        $templateFile = ".\ActionGroup\actionGroupOptionalEmail.json"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -actionGroupName $actionGroupName -actionGroupShortName $actionGroupShortName -emailAddress $emailAddress `
+            -optionalEmailAddress $optionalEmailAddress | Out-Null
+    }
+    # Deploy email address and optional webhook
+    elseif ($optionalEmailAddress -eq "" -and $optionalWebhook -ne "") {
+        "Deploying Azure Monitor Action Group with email address and webhook"
+        $deploymentName = "deploy_action_group_optionalWebhook"
+        $templateFile = ".\ActionGroup\actionGroupOptionalWebhook.json"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -actionGroupName $actionGroupName -actionGroupShortName $actionGroupShortName -emailAddress $emailAddress `
+            -webhookURL $optionalWebhook | Out-Null
+    }
+    # Deploy only email address
+    elseif ($optionalEmailAddress -eq "" -and $optionalWebhook -eq "") {
+        "Deploying Azure Monitor Action Group with email address"
+        $deploymentName = "deploy_action_group"
+        $templateFile = ".\ActionGroup\actionGroup.json"
+        New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroup -TemplateFile $templateFile `
+            -actionGroupName $actionGroupName -actionGroupShortName $actionGroupShortName -emailAddress $emailAddress | Out-Null
+    }
 }
 else {
     Write-Host "Skipped"
@@ -698,12 +729,12 @@ if ($deployAutomationAccount -eq $true) {
     if ($managedIdentityScope -eq "subscription") {
         Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
             -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup `
-            -Parameters @{"prefixName" = $namingPrefix} | Out-null
+            -Parameters @{"prefixName" = $namingPrefix } | Out-null
     }
     elseif ($managedIdentityScope -eq "resourcegroup") {
         Register-AzAutomationScheduledRunbook -AutomationAccountName $automationAccountName `
             -Name $runbookName -ScheduleName $scheduleName -ResourceGroupName $resourceGroup `
-            -Parameters @{"resourceGroup" = $resourceGroup; "prefixName" = $namingPrefix} | Out-null
+            -Parameters @{"resourceGroup" = $resourceGroup; "prefixName" = $namingPrefix } | Out-null
     }    
 
     # Get automation account managed identity and assign permissions to remediate policies at subscription/resource group level

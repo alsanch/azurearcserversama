@@ -20,6 +20,13 @@
             "metadata": {
                 "description": "Email address."
             }
+        },
+        "webhookURL": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Webhook URL."
+            }
         }
     },
     "resources": [
@@ -36,6 +43,17 @@
                         "name": "monitoringEmail",
                         "emailAddress": "[parameters('emailAddress')]",
                         "useCommonAlertSchema": true
+                    }
+                ],
+                "webhookReceivers": [
+                    {
+                        "name": "Webhook",
+                        "serviceUri": "[parameters('webhookURL')]",
+                        "useCommonAlertSchema": true,
+                        "useAadAuth": false,
+                        "objectId": null,
+                        "identifierUri": null,
+                        "tenantId": null
                     }
                 ]
             }

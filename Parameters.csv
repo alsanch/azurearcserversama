@@ -1,2 +1,2 @@
-"Subscription","Resourcegroup","NamingPrefix", "Location", "Email", "Scope"
-"My Azure Subscription","rg-arc-prod","prod","westeurope", "mymail@mail.com", "resourcegroup"
+"Subscription","Resourcegroup","NamingPrefix", "Location", "Email", "OptionalEmail", "OptionalWebhook", "Scope"
+"My Azure Subscriptio","rg-arc-prod","prod","westeurope", "mymail@mail.com", "myoptionalmail@mail.com", "https://test.test.com/webhook?source=test", "resourcegroup"
