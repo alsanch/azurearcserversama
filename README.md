@@ -36,6 +36,9 @@ Azure Arc enables you to manage your entire environment, with a single pane of g
       - Managed Identity with Resource Policy Contributor permissions at subscription/resource group level to trigger the remediation task
 
 ## Requirements
+- **For Azure VMs, it is needed to have the Azure Monitor Agent (AMA) pre-installed.** You could deploy it at scale by using a user-assigned managed identity and these two Azure Policies:
+    - Assign Built-In User-Assigned Managed Identity to Virtual Machines
+    - Configure Windows virtual machines to run Azure Monitor Agent with user-assigned managed identity-based authentication
 - **Tested in Powershell 7.4.0 and Azure Az 7.0.0 PowerShell module**
 - **Azure Permissions:** Owner
     - Role required to assign the Resource Policy Contributor role to the Automation Account managed identity
